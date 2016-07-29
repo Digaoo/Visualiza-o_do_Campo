@@ -31,6 +31,7 @@ import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 
 class Draw extends Canvas{
 
@@ -41,49 +42,178 @@ class Draw extends Canvas{
   Vector<QColor> legenda = new Vector<QColor>();
   Vector<QColor> area_bola = new Vector<QColor>();
   Vector<QColor> area_robo = new Vector<QColor>();
-  MouseAdapter mouseAdapter;
-  Stringco instrucao=null;
-  boolean bolaboo=true;
+  Vector<QColor> area_gol = new Vector<QColor>();
+  
+  Quadrante robo_area;
+  Quadrante bola_area;
+  Quadrante gol_esq;
+  Quadrante gol_dir;
+  
+  QColor aux = new QColor (2000,2000,new Color(100,100,100));
+  Ellipse2D.Float aux2 = new Ellipse2D.Float (2000,2000,20,20);
+  
+  Stringco instrucao= new Stringco("Posicione o robo",900,35);
+  Ellipse2D.Float blegenda = new Ellipse2D.Float (910,365,18,18);
+  
+  boolean bolaboo=false;
   boolean roboboo=true;
-  Ellipse2D.Float bola = null;
-  Ellipse2D.Float blegenda = new Ellipse2D.Float (910,395,18,18);
+  boolean golboo=false;
+  
+  int xrobo,yrobo;
+  QColor robo;
+  int xbola,ybola;
+  Ellipse2D.Float bola;
+  int xobj,yobj;
+  QColor objetivo;
+  
+  int px,py;
+  MouseAdapter mouseAdapter;
   
   //se achar necessario, fazer funçao para percorrer vector d cor e retirar iteraçoes de mesmas coordenadas (atraves de matriz auxiliar)
   //colocar botoes embaixo da legenda para resetar tudo, e para fechar o programa
-  //demarcar area possivel para colocar robo e bola, e deixar coloca-los pelo mouse 
+  //fazer esquema de função principal chamando subfunçoes para cada tarefa para melhorar visualização do codigo 
   Color c;
   
   Draw () {
 	
 	mouseAdapter = new MouseAdapter() {
 
-			void mouse(MouseEvent e) {
-				System.out.println(e.getX()+" "+e.getY());
-			}
+	  void mouse(MouseEvent e) {
+		
+		if (roboboo&&robo_area.rect.contains(e.getX(),e.getY())) {
+		  
+		  aux = new QColor (e.getX()-10,e.getY()-10,new Color(100,100,100));
+		  
+		  if (px!=e.getX()||py!=e.getY()) {
+		  
+		    repaint (px-10,py-10,40,40);
+		    px=e.getX();
+		    py=e.getY();
+		  
+	      }
+		
+	    }
+	    
+	    else if (bolaboo&&bola_area.rect.contains(e.getX(),e.getY())) {
+		  
+		  aux2 = new Ellipse2D.Float (e.getX()-10,e.getY()-10,20,20);
+		  
+		  if (px!=e.getX()||py!=e.getY()) {
+		  
+		    repaint (px-10,py-10,40,40);
+		    px=e.getX();
+		    py=e.getY();
+		  
+	      }
+		
+	    }
 
-			@Override
-			public void mouseMoved(MouseEvent e) {
-				mouse(e);
-			}
+	  }
 
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				mouse(e);
-			}
+	  @Override
+	  public void mouseMoved(MouseEvent e) {
+	  
+		mouse(e);
+		
+	  }
 
-			@Override
-			public void mousePressed(MouseEvent e) {
-				mouse(e);
-			}
+	  @Override
+	  public void mouseDragged(MouseEvent e) {
+		
+		mouse(e);
+			
+	  }
 
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				mouse(e);
-			}
-		};
+	  @Override
+	  public void mousePressed(MouseEvent e) {
+		
+		if (roboboo) {
+		  
+		  if (robo_area.rect.contains(e.getX(),e.getY())) {
+		  
+		    xrobo=e.getX();
+		    yrobo=e.getY();
+		    
+		  }
+		  
+		  else {
+			  
+			xrobo=aux.x;
+			yrobo=aux.y;
+			  
+		  }
+		  
+		  robo = new QColor (xrobo,yrobo,new Color(100,100,100));
+		  roboboo=false;
+		  bolaboo=true;
+		  instrucao= new Stringco("Posicione a bola",900,35);
+		  repaint();
+		
+	    }
+	    
+	    else if (bolaboo) {
+		  
+		  if(bola_area.rect.contains(e.getX(),e.getY())) {
+		  
+		    xbola=e.getX();
+		    ybola=e.getY();
+		  
+	      }
+	      
+	      else {
+			
+			xbola=(int)aux2.x;
+			ybola=(int)aux2.y;
+			  
+		  }
+		  
+		  instrucao= new Stringco("Selecione o lado objetivo",900,35);
+		  bola = new Ellipse2D.Float (e.getX()-10,e.getY()-10,20,20);
+		  bolaboo=false;
+		  golboo=true;
+		  repaint();
+		
+	    }
+	    
+	    else if (golboo) {
+			
+		  if (gol_esq.rect.contains(e.getX(),e.getY())) {
+			
+			objetivo = new QColor (43*20+1,15*20+1,new Color(96,0,48));
+			xobj=860;
+			yobj=310;
+			golboo=false;
+			repaint();
+			  
+		  }
+		  
+		  else if (gol_dir.rect.contains(e.getX(),e.getY())) {
+			
+			objetivo = new QColor (43*20+1,20*20+1,new Color(96,0,48));
+			xobj=860;
+			yobj=410;
+			golboo=false;
+			repaint();
+			  
+		  }
+		  	
+		}
+	  
+	  }
 
-		addMouseListener(mouseAdapter);
-		addMouseMotionListener(mouseAdapter);  
+	  @Override
+	  public void mouseReleased(MouseEvent e) {
+		 
+		mouse(e);
+	  
+	  }
+	  
+    };
+	  
+	addMouseListener(mouseAdapter);
+    addMouseMotionListener(mouseAdapter);
+	  
+  
   }
   
   @Override
@@ -92,9 +222,9 @@ class Draw extends Canvas{
 	super.paint(g);
 	g2 = (Graphics2D) g;
 	
-	//for (Quadrante q:quadrantes) 
+	for (Quadrante q:quadrantes) 
       
-      //g2.draw(q.rect);
+      g2.draw(q.rect);
         
     for (Stringco s:coords) 
       
@@ -121,28 +251,7 @@ class Draw extends Canvas{
 	g2.fillArc((int)blegenda.getX(),(int)blegenda.getY(),(int)blegenda.getWidth(),(int)blegenda.getHeight(),0,360);
 	g2.setColor(getForeground());
 	
-	if (bola!=null) {
-	
-	  g2.draw(bola);
-	  g2.setColor(new Color (196,105,77));
-	  g2.fillArc((int)bola.getX(),(int)bola.getY(),(int)bola.getWidth(),(int)bola.getHeight(),0,360);
-	  g2.setColor(getForeground());
-	  
-	}
-	
 	if (instrucao!=null) g2.drawString(instrucao.str,instrucao.x,instrucao.y);
-	
-	if (bolaboo) {
-	  
-	  for (QColor qc:area_bola) {
-	 
-	    g2.setColor(qc.c);
-	    g2.fillRect(qc.x*20+21,qc.y*20+21,19,19);
-	    g2.setColor(getForeground());
-	    
-	  }
-	  	
-	}
 	
 	if (roboboo) {
 	  
@@ -153,6 +262,62 @@ class Draw extends Canvas{
 	    g2.setColor(getForeground());
 	    
 	  }
+	  
+	  g2.setColor(aux.c);
+	  g2.fillRect(aux.x,aux.y,20,20);
+	  g2.setColor(getForeground());
+	  	
+	}
+	
+	else if (!roboboo) {
+	  
+	  g2.setColor(robo.c);
+	  g2.fillRect(robo.x,robo.y,20,20);
+	  g2.setColor(getForeground());
+	  	
+	}
+	
+	if (bolaboo) {
+	  
+	  for (QColor qc:area_bola) {
+	 
+	    g2.setColor(qc.c);
+	    g2.fillRect(qc.x*20+21,qc.y*20+21,19,19);
+	    g2.setColor(getForeground());
+	    
+	  }
+	  
+	  g2.setColor(new Color (196,105,77));
+	  g2.fillArc((int)aux2.getX(),(int)aux2.getY(),(int)aux2.getWidth(),(int)aux2.getHeight(),0,360);
+	  g2.setColor(getForeground());
+	  	
+	}
+	
+	else if (!roboboo) {
+	  
+	  g2.setColor(new Color (196,105,77));
+	  g2.fillArc((int)bola.getX(),(int)bola.getY(),(int)bola.getWidth(),(int)bola.getHeight(),0,360);
+	  g2.setColor(getForeground());
+	  	
+	}
+	
+	if (golboo) {
+	  
+	  for (QColor qc:area_gol) {
+	 
+	    g2.setColor(qc.c);
+	    g2.fillRect(qc.x*20+21,qc.y*20+21,19,5*20-1);
+	    g2.setColor(getForeground());
+	    
+	  }
+	  	
+    }
+    
+    else if (!roboboo&&!bolaboo) {
+	  
+	  g2.setColor(objetivo.c);
+	  g2.fillRect(objetivo.x,objetivo.y,19,19);
+	  g2.setColor(getForeground());
 	  	
 	}
 	  
@@ -175,7 +340,7 @@ class Stringco {
   	
 }
 
-class Quadrante extends JPanel {
+class Quadrante {
 	
   Rectangle2D.Float rect;
   
@@ -197,6 +362,18 @@ class QColor {
     this.x=x;
     this.y=y;
     this.c=c;
+      
+  }
+  	
+}
+
+class Ponto {
+	
+  
+  
+  Ponto () {
+    
+    
       
   }
   	
@@ -274,22 +451,29 @@ class Inicio {
 	  
 	}
 	
-	//22,3 - 37,3 - 22,30 - 37,30
-	//7,2 - 7,31 - 19,2 - 19,31
-	
 	for (i=7;i<20;i++)
 	  for (j=2;j<32;j++)
 	  
 	    draw.area_robo.add(new QColor (i,j,new Color (0,255,100)));
 	    
+	draw.robo_area = new Quadrante (7*20+20,2*20+20,13*20,30*20);
+	    
 	for (i=23;i<37;i++)
 	  for (j=3;j<31;j++)
 	  
 	    draw.area_bola.add(new QColor (i,j,new Color (0,255,100)));
+	    
+	draw.bola_area = new Quadrante (23*20+20,3*20+20,14*20,28*20);
 	
-	offset=295;
+	draw.area_gol.add(new QColor (42,12,new Color (0,255,100)));
+	draw.area_gol.add(new QColor (42,17,new Color (0,255,100)));
+	    
+	draw.gol_esq = new Quadrante (42*20+20,12*20+20,20,5*20);
+	draw.gol_dir = new Quadrante (42*20+20,17*20+20,20,5*20);
 	
-	draw.quadrantes.add(new Quadrante(900,offset,175,160));
+	offset=265;
+	
+	draw.quadrantes.add(new Quadrante(900,offset,160,190));
 	
 	draw.quadrantes.add(new Quadrante(910,offset+10,20,20));
 	draw.legenda.add(new QColor (910,offset+10,new Color (0,18,175)));
@@ -300,14 +484,18 @@ class Inicio {
 	draw.coords.add(new Stringco("- Gol do Adversário",935,offset+55));
 	
 	draw.quadrantes.add(new Quadrante(910,offset+70,20,20));
-	draw.legenda.add(new QColor (910,offset+70,new Color (150,100,250)));
+	draw.legenda.add(new QColor (910,offset+70,new Color (100,100,100)));
 	draw.coords.add(new Stringco("- Robo",935,offset+85));
 	
 	draw.coords.add(new Stringco("- Bola",935,offset+115));
 	
 	draw.quadrantes.add(new Quadrante(910,offset+130,20,20));
 	draw.legenda.add(new QColor (910,offset+130,new Color (0,255,100)));
-	draw.coords.add(new Stringco("- Posicionar Elemento",935,offset+145));
+	draw.coords.add(new Stringco("- Área de Seleção",935,offset+145));
+	
+	draw.quadrantes.add(new Quadrante(910,offset+160,20,20));
+	draw.legenda.add(new QColor (910,offset+160,new Color (96,0,48)));
+	draw.coords.add(new Stringco("- Objetivo",935,offset+175));
         
   }
   
