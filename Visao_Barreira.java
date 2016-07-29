@@ -18,7 +18,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 
 //colocar botoes embaixo da legenda para resetar tudo, e ligar/desligar grade
-//Mudar a pintura do campo de modo a utilizar grandes retangulos ao inves de inumeros pequenos 
+//Usar clip no paint
 
 //Classe que faz os desenhos e trata o mouse
 class Draw extends Canvas{
