@@ -1,34 +1,18 @@
 import java.awt.Dimension;
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Vector;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JButton;
-import javax.swing.Timer;
-import javax.imageio.ImageIO;
-import java.io.File;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import javax.swing.JComponent;
 import java.awt.Canvas;
-import java.util.Vector;
 import java.awt.Color;
-import javax.swing.JSpinner;
-import javax.swing.JSpinner.DefaultEditor;
-import javax.swing.SpinnerModel;
-import javax.swing.SpinnerNumberModel;
 import java.awt.BorderLayout;
-import javax.swing.JComboBox;
 import java.awt.geom.Ellipse2D;
-import javax.swing.JOptionPane;
 import java.awt.Toolkit;
-import java.awt.event.WindowFocusListener;
-import java.awt.event.WindowEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
@@ -54,6 +38,8 @@ class Draw extends Canvas{
   Vector<QColor> area_bola = new Vector<QColor>();
   Vector<QColor> area_robo = new Vector<QColor>();
   Vector<QColor> area_gol = new Vector<QColor>();
+  //Guarda os pontos da função que serão impressos
+  Vector<Quadrante> arco = new Vector<Quadrante>();
   //Desenham os limites em volta das areas de seleção
   Quadrante robo_area;
   Quadrante bola_area;
@@ -70,15 +56,20 @@ class Draw extends Canvas{
   boolean roboboo=true;
   boolean golboo=false;
   //Guardam as coordenadas finais dos elementos e os desenham nesse local
-  int xrobo,yrobo;
+  Point2D.Float roboxy;
   QColor robo;
-  int xbola,ybola;
+  Point2D.Float bolaxy;
   Ellipse2D.Float bola;
-  int xobj,yobj;
+  Point2D.Float objxy;
   QColor objetivo;
   //Listener do mouse e auxiliares
   MouseAdapter mouseAdapter;
-  int px,py; 
+  int px,py;
+  //Variáveis para funcinamento da geração de função
+  Interpola inter;
+  boolean gera=false;
+  int i;
+  float erro;
   
   Draw () {
 	
@@ -147,19 +138,17 @@ class Draw extends Canvas{
 		  
 		  if (robo_area.rect.contains(e.getX(),e.getY())) {
 		  
-		    xrobo=e.getX();
-		    yrobo=e.getY();
+		    roboxy = new Point2D.Float ((int)e.getX(),(int)e.getY());
 		    
 		  }
 		  
 		  else {
 			  
-			xrobo=aux.x;
-			yrobo=aux.y;
+			roboxy = new Point2D.Float ((int)aux.x,(int)aux.y);
 			  
 		  }
 		  
-		  robo = new QColor (xrobo,yrobo,new Color(100,100,100));
+		  robo = new QColor ((int)roboxy.x,(int)roboxy.y,new Color(100,100,100));
 		  roboboo=false;
 		  bolaboo=true;
 		  instrucao= new Stringco("Posicione a bola",900,35);
@@ -176,15 +165,13 @@ class Draw extends Canvas{
 		  
 		  if(bola_area.rect.contains(e.getX(),e.getY())) {
 		  
-		    xbola=e.getX();
-		    ybola=e.getY();
+		    bolaxy = new Point2D.Float ((int)e.getX(),(int)e.getY());
 		  
 	      }
 	      
 	      else {
 			
-			xbola=(int)aux2.x;
-			ybola=(int)aux2.y;
+			bolaxy = new Point2D.Float ((int)aux2.x,(int)aux2.y);
 			  
 		  }
 		  
@@ -206,10 +193,10 @@ class Draw extends Canvas{
 		  if (gol_esq.rect.contains(e.getX(),e.getY())) {
 			
 			objetivo = new QColor (43*20,15*20,new Color(96,0,48));
-			xobj=860;
-			yobj=310;
+			objxy = new Point2D.Float ((int)860,(int)310);
 			golboo=false;
 			instrucao= null;
+			gera=true;
 			repaint();
 			  
 		  }
@@ -217,10 +204,10 @@ class Draw extends Canvas{
 		  else if (gol_dir.rect.contains(e.getX(),e.getY())) {
 			
 			objetivo = new QColor (43*20,20*20,new Color(96,0,48));
-			xobj=860;
-			yobj=410;
+			objxy = new Point2D.Float ((int)860,(int)410);
 			golboo=false;
 			instrucao= null;
+			gera=true;
 			repaint();
 			  
 		  }
@@ -258,7 +245,6 @@ class Draw extends Canvas{
 	//Adiciona os listeners na classe
 	addMouseListener(mouseAdapter);
     addMouseMotionListener(mouseAdapter);
-	  
   
   }
   
@@ -273,6 +259,7 @@ class Draw extends Canvas{
     //grid(g2);
     ajuda(g2);
     posicionar(g2);
+    funcao(g2);
 	  
   }
   
@@ -409,6 +396,36 @@ class Draw extends Canvas{
 	}
 	  
   }
+  
+  public void funcao (Graphics2D g2) {
+	
+	if (gera) {
+	
+	  inter = new Interpola(roboxy,bolaxy,objxy);
+	  
+	  erro=Math.abs(Math.abs((int)roboxy.x)-Math.abs(inter.funcao((int)roboxy.x)));
+	  System.out.println(roboxy.y+" "+inter.funcao((int)roboxy.x));
+	  System.out.println(bolaxy.y+" "+inter.funcao((int)bolaxy.x));
+	  System.out.println(objxy.y+" "+inter.funcao((int)objxy.x));
+	  System.out.println("-"+erro+"-");
+	  
+	  for(i=(int)roboxy.x;i<=objxy.x;i++) {
+	    
+	    arco.add(new Quadrante(i,Math.abs(Math.abs(inter.funcao(i))-erro),0,0));
+	    
+	  }
+	    
+	  gera=false;
+	  
+	}
+	
+	if(!arco.isEmpty()) 
+	
+	  for (Quadrante q:arco) 
+      
+      g2.draw(q.rect);
+	  
+  }
   	
 }
 
@@ -433,7 +450,7 @@ class Quadrante {
 	
   Rectangle2D.Float rect;
   
-  Quadrante (int x,int y,int w,int h) {
+  Quadrante (float x,float y,int w,int h) {
 	
 	rect = new Rectangle2D.Float(x,y,w,h);
 	  
@@ -574,6 +591,8 @@ class Inicio {
   //Prepara os elemento que compõem a legenda
   public void prepLegenda () {
 	
+	//usei offset somando para facilitar mudar a altura da legenda em caso de necessidades
+	
 	offset=265;
 	
 	draw.legenda3.add(new Quadrante(900,offset,160,190));
@@ -610,6 +629,101 @@ class Inicio {
     int y = (int) ((dimension.getHeight() - frame.getHeight()) / 2);
     frame.setLocation(x, y);
     
+  }
+  	
+}
+
+//Gera a função que será seguida pelo robô na hora do chute
+class Interpola {
+
+  int i,j,k;
+  double[][] pot = new double[3][3];
+  double[] vy = new double[3];
+  double[] vx = new double[3];
+  double aux;
+  
+  //Cria uma matriz formada pelas potencias dos valores em x dos pontos dados de 0 a n-1, sendo n o número de pontos dados
+  Interpola (Point2D.Float a,Point2D.Float b,Point2D.Float c) {
+	  
+	vx[0]=a.x;
+	vx[1]=b.x;
+	vx[2]=c.x;
+	
+	aux=a.x;
+	  
+	for (i=0;i<3;i++)
+	  for (j=0;j<3;j++)
+	    
+	    pot[i][j] = Math.pow(vx[i],j);
+	    
+	vy[0]=a.y;
+	vy[1]=b.y;
+	vy[2]=c.y;
+
+    gauss();
+	  
+  }
+  
+  //Transforma a matriz em triangular superior e resolve o sistema 
+  public void gauss () {
+	
+    int n=3;
+    double m,soma;
+	
+    for(j=0;j<n;j++) {
+      for(i=j+1;i<n;i++) {
+     
+        m = pot[i][j]/ pot[j][j];
+       
+        for (k=j;k<n;k++) {
+         
+          pot[i][k]= pot[i][k]-m*pot[j][k];
+          
+        }
+        
+        vy[i]=vy[i]-m*vy[j];
+       
+      }
+      
+    }
+      
+    vx[n-1]=vy[n-1]/pot[n-1][n-1];
+    
+    for(i=n-1;i>0;i--) {
+		
+      soma = 0;
+      for(j=i+1;j<n;j++) {
+      
+        soma = soma + pot[i][j]*vx[j];
+        vx[i]=(vy[i]-soma)/pot[i][i];
+      
+      } 
+       
+    }
+    
+    /*
+    for (i=0;i<3;i++)
+	    
+	    System.out.println(pot[i][0]+" "+pot[i][1]+" "+pot[i][2]);
+	    
+	for (i=0;i<3;i++)
+	    
+	    System.out.println("- "+vy[i]);
+	    
+	for (i=0;i<3;i++)
+	    
+	    System.out.println("-- "+vx[i]);
+	    
+	System.out.println("--- "+funcao(aux));
+	*/
+	  
+  }
+  
+  //Gerada a função, esse método retorna o valor da mesma para cada x dado
+  public float funcao (int x) {
+	
+	return (float)vx[0]+(float)vx[1]*x+(float)vx[2]*x*x;
+	
   }
   	
 }
