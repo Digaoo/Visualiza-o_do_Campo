@@ -29,14 +29,22 @@ import javax.swing.JOptionPane;
 import java.awt.Toolkit;
 import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-class Draw extends Canvas {
+class Draw extends Canvas{
 
   Graphics2D g2;
   Vector<Quadrante> quadrantes = new Vector<Quadrante>();
   Vector<Stringco> coords = new Vector<Stringco>();
   Vector<QColor> special = new Vector<QColor>();
   Vector<QColor> legenda = new Vector<QColor>();
+  Vector<QColor> area_bola = new Vector<QColor>();
+  Vector<QColor> area_robo = new Vector<QColor>();
+  MouseAdapter mouseAdapter;
+  Stringco instrucao=null;
+  boolean bolaboo=true;
+  boolean roboboo=true;
   Ellipse2D.Float bola = null;
   Ellipse2D.Float blegenda = new Ellipse2D.Float (910,395,18,18);
   
@@ -45,15 +53,48 @@ class Draw extends Canvas {
   //demarcar area possivel para colocar robo e bola, e deixar coloca-los pelo mouse 
   Color c;
   
+  Draw () {
+	
+	mouseAdapter = new MouseAdapter() {
+
+			void mouse(MouseEvent e) {
+				System.out.println(e.getX()+" "+e.getY());
+			}
+
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				mouse(e);
+			}
+
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				mouse(e);
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				mouse(e);
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				mouse(e);
+			}
+		};
+
+		addMouseListener(mouseAdapter);
+		addMouseMotionListener(mouseAdapter);  
+  }
+  
   @Override
-  public void paint (Graphics g) {
+  public void paint(Graphics g) {
 	
 	super.paint(g);
 	g2 = (Graphics2D) g;
 	
-	for (Quadrante q:quadrantes) 
+	//for (Quadrante q:quadrantes) 
       
-      g2.draw(q.rect);
+      //g2.draw(q.rect);
         
     for (Stringco s:coords) 
       
@@ -88,6 +129,32 @@ class Draw extends Canvas {
 	  g2.setColor(getForeground());
 	  
 	}
+	
+	if (instrucao!=null) g2.drawString(instrucao.str,instrucao.x,instrucao.y);
+	
+	if (bolaboo) {
+	  
+	  for (QColor qc:area_bola) {
+	 
+	    g2.setColor(qc.c);
+	    g2.fillRect(qc.x*20+21,qc.y*20+21,19,19);
+	    g2.setColor(getForeground());
+	    
+	  }
+	  	
+	}
+	
+	if (roboboo) {
+	  
+	  for (QColor qc:area_robo) {
+	 
+	    g2.setColor(qc.c);
+	    g2.fillRect(qc.x*20+21,qc.y*20+21,19,19);
+	    g2.setColor(getForeground());
+	    
+	  }
+	  	
+	}
 	  
   }
   	
@@ -108,7 +175,7 @@ class Stringco {
   	
 }
 
-class Quadrante {
+class Quadrante extends JPanel {
 	
   Rectangle2D.Float rect;
   
@@ -140,20 +207,10 @@ class Inicio {
   int i,j;
   Draw draw;
   private int offset=20;
-  JFrame janaux = new JFrame ("Info");
   JFrame jan;
   JFrame warning;
-  JPanel[] p = new JPanel [6];
-  JSpinner xbola = new JSpinner(new SpinnerNumberModel (1,1,41,1));
-  JSpinner ybola = new JSpinner(new SpinnerNumberModel (1,1,32,1));
-  JSpinner xrobo = new JSpinner(new SpinnerNumberModel (1,1,41,1));
-  JSpinner yrobo = new JSpinner(new SpinnerNumberModel (1,1,32,1));
-  JComboBox<String> jcb;
-  String[] itens = new String [2];
-  JButton b = new JButton ("Continuar");
   int xb,yb,xr,yr;
   Dimension dimension=null;
-  boolean foco=false;
   
   Inicio (Draw aux,JFrame jan) {
 	  
@@ -220,9 +277,19 @@ class Inicio {
 	//22,3 - 37,3 - 22,30 - 37,30
 	//7,2 - 7,31 - 19,2 - 19,31
 	
+	for (i=7;i<20;i++)
+	  for (j=2;j<32;j++)
+	  
+	    draw.area_robo.add(new QColor (i,j,new Color (0,255,100)));
+	    
+	for (i=23;i<37;i++)
+	  for (j=3;j<31;j++)
+	  
+	    draw.area_bola.add(new QColor (i,j,new Color (0,255,100)));
+	
 	offset=295;
 	
-	draw.quadrantes.add(new Quadrante(900,offset,165,130));
+	draw.quadrantes.add(new Quadrante(900,offset,175,160));
 	
 	draw.quadrantes.add(new Quadrante(910,offset+10,20,20));
 	draw.legenda.add(new QColor (910,offset+10,new Color (0,18,175)));
@@ -238,84 +305,10 @@ class Inicio {
 	
 	draw.coords.add(new Stringco("- Bola",935,offset+115));
 	
-	info();
+	draw.quadrantes.add(new Quadrante(910,offset+130,20,20));
+	draw.legenda.add(new QColor (910,offset+130,new Color (0,255,100)));
+	draw.coords.add(new Stringco("- Posicionar Elemento",935,offset+145));
         
-  }
-  
-  void info () {
-    
-    for(i=0;i<6;i++) p[i]=new JPanel(new BorderLayout());
-    
-    ((DefaultEditor) xbola.getEditor()).getTextField().setEditable(false);
-    ((DefaultEditor) ybola.getEditor()).getTextField().setEditable(false);
-    ((DefaultEditor) xrobo.getEditor()).getTextField().setEditable(false);
-    ((DefaultEditor) yrobo.getEditor()).getTextField().setEditable(false);
-    itens[0]=new String("Canto Esquerdo");
-    itens[1]=new String("Canto Direito");
-    jcb = new JComboBox <> (itens);
-    b.setPreferredSize(new Dimension(120,17));
-	b.addActionListener(new ActionListener () {
-	    
-	  @Override
-	  public void actionPerformed(ActionEvent e) {
-	    
-	    xb = Integer.parseInt(((DefaultEditor) xbola.getEditor()).getTextField().getText());
-	    yb = Integer.parseInt(((DefaultEditor) ybola.getEditor()).getTextField().getText());
-	    xr = Integer.parseInt(((DefaultEditor) xrobo.getEditor()).getTextField().getText());
-	    yr = Integer.parseInt(((DefaultEditor) yrobo.getEditor()).getTextField().getText());
-	    
-	    if (xb==xr&&yb==yr) {
-			
-	      JOptionPane.showMessageDialog(warning,"O robo e a bola não podem estar na mesma posição","Erro De Posicionamento",JOptionPane.ERROR_MESSAGE);
-	      return;
-	      
-	    }
-	    
-	    else if (xb<xr) {
-			
-	      JOptionPane.showMessageDialog(warning,"A bola não pode estar atrás do robo","Erro De Posicionamento",JOptionPane.ERROR_MESSAGE);
-	      return;
-	      
-	    }
-	    
-	    janaux.setAlwaysOnTop(false);
-	    janaux.setVisible(false);
-	    setPosition();
-	    
-	  }
-	      
-	});
-    
-    p[1].add(new JLabel("Coord Bola  "),BorderLayout.WEST);
-    p[1].add(p[2],BorderLayout.EAST);
-    p[2].add(ybola,BorderLayout.EAST);
-    p[2].add(xbola,BorderLayout.WEST);
-    p[3].add(new JLabel("Coord Robo "),BorderLayout.WEST);
-    p[3].add(p[4],BorderLayout.EAST);
-    p[4].add(yrobo,BorderLayout.EAST);
-    p[4].add(xrobo,BorderLayout.WEST);
-    p[5].add(jcb,BorderLayout.NORTH);
-    p[5].add(b,BorderLayout.SOUTH);
-    p[0].add(p[1],BorderLayout.NORTH);
-    p[0].add(p[3],BorderLayout.CENTER);
-    p[0].add(p[5],BorderLayout.SOUTH);
-    janaux.add(p[0]);
-    janaux.pack();
-    janaux.setResizable(false);
-    janaux.addWindowFocusListener(new WindowFocusListener() {
-	  
-	  @Override
-	  public void windowLostFocus(WindowEvent e) {
-	    
-	    if (foco) janaux.toFront();
-	      
-	  }
-	  
-	  @Override
-	  public void windowGainedFocus (WindowEvent e) {}
-	  
-	});
-      
   }
   
   public void setPosition() {
@@ -344,33 +337,14 @@ class Visao_Barreira {
 	int i,j;
     
     JFrame jan = new JFrame ("Campo");
+    jan.setLayout(new BorderLayout());
     Draw draw = new Draw();
     Inicio in = new Inicio(draw,jan);
     jan.setSize(new Dimension (1100,800));
     jan.add(draw);
-    jan.addWindowFocusListener(new WindowFocusListener() {
-	  
-	  @Override
-	  public void windowLostFocus(WindowEvent e) {
-	    
-	    in.foco=false;
-	    
-	  }
-	  
-	  @Override
-	  public void windowGainedFocus (WindowEvent e) {
-	    
-	    in.foco=true;
-	    in.janaux.toFront();
-	    
-	  }
-	  
-	});
 	jan.setResizable(false);
     jan.setVisible(true);
     in.centreWindow(jan);
-    in.centreWindow(in.janaux);
-    in.janaux.setVisible(true);
     
   }
   
