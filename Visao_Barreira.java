@@ -18,7 +18,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 
 //colocar botoes embaixo da legenda para resetar tudo, e ligar/desligar grade
-//Usar clip no paint
 
 //Classe que faz os desenhos e trata o mouse
 class Draw extends Canvas{
@@ -46,7 +45,7 @@ class Draw extends Canvas{
   Quadrante gol_esq;
   Quadrante gol_dir;
   //Desenha o quadrado do robo que segue o mouse
-  QColor aux = new QColor (2000,2000,new Color(100,100,100));
+  QColor aux = new QColor (2000,2000,20,20,new Color(100,100,100));
   Ellipse2D.Float aux2 = new Ellipse2D.Float (2000,2000,20,20);
   //Desenha a circunferencia da bola que segue o mouse
   Stringco instrucao= new Stringco("Posicione o robo",900,35);
@@ -71,6 +70,8 @@ class Draw extends Canvas{
   int i;
   float erro;
   
+  boolean in=false;
+  
   Draw () {
 	
 	mouseAdapter = new MouseAdapter() {
@@ -80,6 +81,7 @@ class Draw extends Canvas{
 		
 	    roboMouse(e);
 	    bolaMouse(e);
+	    //botaoMouse(e);
 
 	  }
 	  
@@ -88,7 +90,7 @@ class Draw extends Canvas{
 		
 		if (roboboo&&robo_area.rect.contains(e.getX(),e.getY())) {
 		  
-		  aux = new QColor (e.getX()-10,e.getY()-10,new Color(100,100,100));
+		  aux = new QColor (e.getX()-10,e.getY()-10,20,20,new Color(100,100,100));
 		  
 		  if (px!=e.getX()||py!=e.getY()) {
 		  
@@ -120,7 +122,7 @@ class Draw extends Canvas{
 	    }
 		  
 	  }
-
+      
       //Recebe informações de quando o mouse for clicado
 	  @Override
 	  public void mousePressed(MouseEvent e) {
@@ -138,17 +140,13 @@ class Draw extends Canvas{
 		  
 		  if (robo_area.rect.contains(e.getX(),e.getY())) {
 		  
-		    roboxy = new Point2D.Float ((int)e.getX(),(int)e.getY());
+		    roboxy = new Point2D.Float ((int)e.getX()-10,(int)e.getY()-10);
 		    
 		  }
 		  
-		  else {
-			  
-			roboxy = new Point2D.Float ((int)aux.x,(int)aux.y);
-			  
-		  }
+		  else return;
 		  
-		  robo = new QColor ((int)roboxy.x,(int)roboxy.y,new Color(100,100,100));
+		  robo = new QColor ((int)roboxy.x,(int)roboxy.y,20,20,new Color(100,100,100));
 		  roboboo=false;
 		  bolaboo=true;
 		  instrucao= new Stringco("Posicione a bola",900,35);
@@ -165,15 +163,11 @@ class Draw extends Canvas{
 		  
 		  if(bola_area.rect.contains(e.getX(),e.getY())) {
 		  
-		    bolaxy = new Point2D.Float ((int)e.getX(),(int)e.getY());
+		    bolaxy = new Point2D.Float ((int)e.getX()-10,(int)e.getY()-10);
 		  
 	      }
-	      
-	      else {
-			
-			bolaxy = new Point2D.Float ((int)aux2.x,(int)aux2.y);
-			  
-		  }
+		  
+		  else return;
 		  
 		  instrucao= new Stringco("Selecione o lado objetivo",900,35);
 		  bola = new Ellipse2D.Float (e.getX()-10,e.getY()-10,20,20);
@@ -192,7 +186,7 @@ class Draw extends Canvas{
 			
 		  if (gol_esq.rect.contains(e.getX(),e.getY())) {
 			
-			objetivo = new QColor (43*20,15*20,new Color(96,0,48));
+			objetivo = new QColor (43*20,15*20,20,20,new Color(96,0,48));
 			objxy = new Point2D.Float ((int)860,(int)310);
 			golboo=false;
 			instrucao= null;
@@ -203,7 +197,7 @@ class Draw extends Canvas{
 		  
 		  else if (gol_dir.rect.contains(e.getX(),e.getY())) {
 			
-			objetivo = new QColor (43*20,20*20,new Color(96,0,48));
+			objetivo = new QColor (43*20,20*20,20,20,new Color(96,0,48));
 			objxy = new Point2D.Float ((int)860,(int)410);
 			golboo=false;
 			instrucao= null;
@@ -254,7 +248,7 @@ class Draw extends Canvas{
 	
 	super.paint(g);
 	g2 = (Graphics2D) g;
-        
+	
     campo(g2);
     //grid(g2);
     ajuda(g2);
@@ -269,7 +263,7 @@ class Draw extends Canvas{
 	for (QColor qc:special) {
 	 
 	 g2.setColor(qc.c);
-	 g2.fillRect(qc.x*20+20,qc.y*20+20,20,20);
+	 g2.fillRect(qc.x*20+20,qc.y*20+20,qc.w,qc.h);
 	 g2.setColor(getForeground());
 	 
 	}
@@ -295,7 +289,7 @@ class Draw extends Canvas{
 	for (QColor qc:legenda) {
 	 
 	 g2.setColor(qc.c);
-	 g2.fillRect(qc.x+1,qc.y+1,19,19);
+	 g2.fillRect(qc.x+1,qc.y+1,qc.w,qc.h);
 	 g2.setColor(getForeground());
 	 
 	}
@@ -325,7 +319,7 @@ class Draw extends Canvas{
 	  for (QColor qc:area_robo) {
 	 
 	    g2.setColor(qc.c);
-	    g2.fillRect(qc.x*20+20,qc.y*20+20,20,20);
+	    g2.fillRect(qc.x*20+20,qc.y*20+20,qc.w,qc.h);
 	    g2.setColor(getForeground());
 	    
 	  }
@@ -351,7 +345,7 @@ class Draw extends Canvas{
 	  for (QColor qc:area_bola) {
 	 
 	    g2.setColor(qc.c);
-	    g2.fillRect(qc.x*20+20,qc.y*20+20,20,20);
+	    g2.fillRect(qc.x*20+20,qc.y*20+20,qc.w,qc.h);
 	    g2.setColor(getForeground());
 	    
 	  }
@@ -377,7 +371,7 @@ class Draw extends Canvas{
 	  for (QColor qc:area_gol) {
 	 
 	    g2.setColor(qc.c);
-	    g2.fillRect(qc.x*20+20,qc.y*20+20,20,5*20);
+	    g2.fillRect(qc.x*20+20,qc.y*20+20,qc.w,qc.h);
 	    g2.setColor(getForeground());
 	    
 	  }
@@ -397,6 +391,7 @@ class Draw extends Canvas{
 	  
   }
   
+  //Desenha a função que represetará a trajetória do robo,para a bolo e depois para o gol
   public void funcao (Graphics2D g2) {
 	
 	if (gera) {
@@ -463,11 +458,14 @@ class QColor {
   
   Color c;
   int x,y;
+  int w,h;
   
-  QColor (int x,int y,Color c) {
+  QColor (int x,int y,int w,int h,Color c) {
     
     this.x=x;
     this.y=y;
+    this.h=h;
+    this.w=w;
     this.c=c;
       
   }
@@ -526,65 +524,40 @@ class Inicio {
   //Prepara o desengo do campo
   public void prepCampo () {
 	
-	for (i=0;i<34;i++) draw.special.add(new QColor (0,i,new Color (0,0,0)));
+	draw.special.add(new QColor (0,0,43*20,20,new Color (0,0,0)));
+	draw.special.add(new QColor (0,33,43*20,20,new Color (0,0,0)));
+	draw.special.add(new QColor (0,0,20,34*20,new Color (0,0,0)));
+	draw.special.add(new QColor (42,0,20,34*20,new Color (0,0,0)));
 	
-	for (i=0;i<43;i++) draw.special.add(new QColor (i,0,new Color (0,0,0)));
-	
-	for (i=0;i<34;i++) draw.special.add(new QColor (42,i,new Color (0,0,0)));
-	
-	for (i=0;i<43;i++) draw.special.add(new QColor (i,33,new Color (0,0,0)));
-	
-	for (i=12;i<22;i++) draw.special.add(new QColor (42,i,new Color (209,0,0)));
-	
-	for (i=12;i<22;i++) draw.special.add(new QColor (0,i,new Color (0,18,175)));
-	
-	for (i=1;i<42;i++)
-	  for (j=1;j<33;j++)
+	draw.special.add(new QColor (42,12,20,10*20,new Color (209,0,0)));
+	draw.special.add(new QColor (0,12,20,10*20,new Color (0,18,175)));
 	  
-	    draw.special.add(new QColor (i,j,new Color (15,115,45)));
+	draw.special.add(new QColor (1,1,41*20,32*20,new Color (15,115,45)));
 	    
-	for (i=1;i<33;i++) draw.special.add(new QColor (21,i,new Color (255,255,255)));
-	
-	for (i=8;i<26;i++) {
-	
-	  draw.special.add(new QColor (38,i,new Color (255,255,255)));
-      draw.special.add(new QColor (4,i,new Color (255,255,255)));
-      
-    }
-	
-	for (i=0;i<4;i++) {
-	
-	  draw.special.add(new QColor (i+1,8,new Color (255,255,255)));
-	  draw.special.add(new QColor (i+1,25,new Color (255,255,255)));
-	  draw.special.add(new QColor (i+38,8,new Color (255,255,255)));
-	  draw.special.add(new QColor (i+38,25,new Color (255,255,255)));
-	  
-	}  
+    draw.special.add(new QColor (21,1,20,32*20,new Color (255,255,255)));
+	draw.special.add(new QColor (38,8,20,18*20,new Color (255,255,255)));
+    draw.special.add(new QColor (4,8,20,18*20,new Color (255,255,255)));
+	draw.special.add(new QColor (1,8,4*20,20,new Color (255,255,255)));
+	draw.special.add(new QColor (1,25,4*20,20,new Color (255,255,255)));
+	draw.special.add(new QColor (38,8,4*20,20,new Color (255,255,255)));
+	draw.special.add(new QColor (38,25,4*20,20,new Color (255,255,255)));
 	  
   }
   
   //Prepara o desenho das áreas de seleção
   public void prepSelecao() {
-	
-	for (i=7;i<20;i++)
-	  for (j=2;j<32;j++)
 	  
-	    draw.area_robo.add(new QColor (i,j,new Color (0,255,100)));
-	    
+	draw.area_robo.add(new QColor (7,2,13*20,30*20,new Color (0,255,100)));
 	draw.robo_area = new Quadrante (7*20+20,2*20+20,13*20,30*20);
 	    
-	for (i=23;i<37;i++)
-	  for (j=3;j<31;j++)
-	  
-	    draw.area_bola.add(new QColor (i,j,new Color (0,255,100)));
-	    
+	draw.area_bola.add(new QColor (23,3,14*20,28*20,new Color (0,255,100)));
 	draw.bola_area = new Quadrante (23*20+20,3*20+20,14*20,28*20);
 	
-	draw.area_gol.add(new QColor (42,12,new Color (0,255,100)));
-	draw.area_gol.add(new QColor (42,17,new Color (0,255,100)));
+	draw.area_gol.add(new QColor (42,12,20,5*20,new Color (0,255,100)));
+	draw.area_gol.add(new QColor (42,17,20,5*20,new Color (0,255,100)));
 	    
-	draw.gol_esq = new Quadrante (43*20,13*20,19,5*20);
-	draw.gol_dir = new Quadrante (43*20,18*20,19,5*20);
+	draw.gol_esq = new Quadrante (43*20,13*20,20,5*20);
+	draw.gol_dir = new Quadrante (43*20,18*20,20,5*20);
 	  
   }
   
@@ -598,25 +571,25 @@ class Inicio {
 	draw.legenda3.add(new Quadrante(900,offset,160,190));
 	
 	draw.legenda3.add(new Quadrante(910,offset+10,20,20));
-	draw.legenda.add(new QColor (910,offset+10,new Color (0,18,175)));
+	draw.legenda.add(new QColor (910,offset+10,20,20,new Color (0,18,175)));
 	draw.legenda2.add(new Stringco("- Gol do Time",935,offset+25));
 	
 	draw.legenda3.add(new Quadrante(910,offset+40,20,20));
-	draw.legenda.add(new QColor (910,offset+40,new Color (209,0,0)));
+	draw.legenda.add(new QColor (910,offset+40,20,20,new Color (209,0,0)));
 	draw.legenda2.add(new Stringco("- Gol do Adversário",935,offset+55));
 	
 	draw.legenda3.add(new Quadrante(910,offset+70,20,20));
-	draw.legenda.add(new QColor (910,offset+70,new Color (100,100,100)));
+	draw.legenda.add(new QColor (910,offset+70,20,20,new Color (100,100,100)));
 	draw.legenda2.add(new Stringco("- Robo",935,offset+85));
 	
 	draw.legenda2.add(new Stringco("- Bola",935,offset+115));
 	
 	draw.legenda3.add(new Quadrante(910,offset+130,20,20));
-	draw.legenda.add(new QColor (910,offset+130,new Color (0,255,100)));
+	draw.legenda.add(new QColor (910,offset+130,20,20,new Color (0,255,100)));
 	draw.legenda2.add(new Stringco("- Área de Seleção",935,offset+145));
 	
 	draw.legenda3.add(new Quadrante(910,offset+160,20,20));
-	draw.legenda.add(new QColor (910,offset+160,new Color (96,0,48)));
+	draw.legenda.add(new QColor (910,offset+160,20,20,new Color (96,0,48)));
 	draw.legenda2.add(new Stringco("- Objetivo",935,offset+175));
 	  
   }
