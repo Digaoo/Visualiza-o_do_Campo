@@ -16,8 +16,10 @@ import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
-//colocar botoes embaixo da legenda para resetar tudo, e ligar/desligar grade
+//colocar sistema com timer para prevenir que reset e grade sejam clicados excessivamente
 
 //Classe que faz os desenhos e trata o mouse
 class Draw extends Canvas{
@@ -68,6 +70,8 @@ class Draw extends Canvas{
   Interpola inter;
   boolean gera=false;
   int i;
+  //Variavel para controle da grade
+  int grade=0;
   
   Draw () {
 	
@@ -247,7 +251,7 @@ class Draw extends Canvas{
 	g2 = (Graphics2D) g;
 	
     campo(g2);
-    //grid(g2);
+    if(grade==1)grid(g2);
     ajuda(g2);
     posicionar(g2);
     funcao(g2);
@@ -618,16 +622,16 @@ class Interpola {
     
       matrizX[i][0] = 1;
       
-    matrizX[0][1] = robo.x; // completando a segunda coluna da matriz dos X's com a posicao x do robo.
-    matrizX[1][1] = bola.x; // completando a segunda coluna da matriz dos X's com a posicao x da bola.
+    matrizX[1][1] = robo.x; // completando a segunda coluna da matriz dos X's com a posicao x do robo.
+    matrizX[0][1] = bola.x; // completando a segunda coluna da matriz dos X's com a posicao x da bola.
     matrizX[2][1] = objetivo.x;  // completando a segunda coluna da matriz dos X's com a posicao x do objetivo.
     
     for(int i=0; i<ORDEM; i++)
     
       matrizX[i][2] = matrizX[i][1]*matrizX[i][1]; // completa a ultima coluna da matriz dos X's com as posições x dos elementos ao quadrado.
     
-    vetorY[0] = robo.y; // completando o vetor dos Y's com a posicao y do robo.
-    vetorY[1] = bola.y; // completando o vetor dos Y's com a posicao y da bola.
+    vetorY[1] = robo.y; // completando o vetor dos Y's com a posicao y do robo.
+    vetorY[0] = bola.y; // completando o vetor dos Y's com a posicao y da bola.
     vetorY[2] = objetivo.y;  // completando o vetor dos Y's com a posicao y do objetivo.
     triangulariza(); // triangulariza a matriz dos valores de X.
     vetorA[2] = vetorY[2]/matrizX[2][2];
@@ -659,22 +663,89 @@ class Interpola {
 
 //Classe que contém a main
 class Visao_Barreira {
+	
+  JButton reset = new JButton ("Reset");
+  JButton grade = new JButton ("Grade: Nula");
+  String aux;
+  JFrame jan = new JFrame ("Campo");
+  Draw draw = new Draw();
+  Inicio in = new Inicio(draw,jan);
+  Visao_Barreira vb;
   
   //Cria as instâncias e inicia o programa
   public static void main (String[] args) {
 	  
 	int i,j;
+	
+	Visao_Barreira vb = new Visao_Barreira();
     
-    JFrame jan = new JFrame ("Campo");
-    jan.setLayout(new BorderLayout());
-    Draw draw = new Draw();
-    Inicio in = new Inicio(draw,jan);
-    jan.setSize(new Dimension (1100,800));
-    jan.add(draw);
-	jan.setResizable(false);
-    jan.setVisible(true);
-    in.centreWindow(jan);
+    vb.jan.setLayout(null);
+    vb.jan.setSize(new Dimension (1100,800));
+    vb.jan.add(vb.reset);
+    vb.prep(vb.reset,vb);
+    vb.jan.add(vb.grade);
+    vb.prep2(vb.grade,vb);
+    vb.jan.add(vb.draw);
+    vb.draw.setBounds(0,0,1100,800);;
+	vb.jan.setResizable(false);
+    vb.jan.setVisible(true);
+    vb.in.centreWindow(vb.jan);
     
+  }
+  
+  //Prepara o botão que reseta o programa
+  public static void prep (JButton reset,Visao_Barreira vb) {
+	
+	vb.reset.addActionListener(new ActionListener() {
+	  
+	  @Override
+	  public void actionPerformed(ActionEvent e) {
+		
+		vb.jan.remove(vb.draw);
+		vb.draw=new Draw();
+		vb.in = new Inicio(vb.draw,vb.jan);
+		vb.jan.add(vb.draw);
+		vb.draw.setBounds(0,0,1100,800);
+		  
+	  }
+	  	
+	});
+	
+	vb.reset.setBounds(900,460,161,50);
+	  
+  }
+  
+  public static void prep2 (JButton grade,Visao_Barreira vb) {
+	
+	vb.grade.addActionListener(new ActionListener() {
+	  
+	  @Override
+	  public void actionPerformed(ActionEvent e) {
+		
+		vb.aux = ((JButton)e.getSource()).getText();
+		
+		if (vb.aux.equalsIgnoreCase("Grade: Nula")) {
+		  
+		  ((JButton)e.getSource()).setText("Grade: C.P.");
+		  vb.draw.grade=1;
+		  vb.draw.repaint();
+		  	
+	    }
+	    
+	    else if (vb.aux.equalsIgnoreCase("Grade: C.P.")) {
+		  
+		  ((JButton)e.getSource()).setText("Grade: Nula");
+		  vb.draw.grade=0;
+		  vb.draw.repaint();
+		  	
+	    }
+		  
+	  }
+	  	
+	});
+	
+	vb.grade.setBounds(900,513,161,50);
+	  
   }
   
 }
