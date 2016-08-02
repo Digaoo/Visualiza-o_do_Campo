@@ -18,6 +18,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.Timer;
 
 //colocar sistema com timer para prevenir que reset e grade sejam clicados excessivamente
 
@@ -664,13 +665,39 @@ class Interpola {
 //Classe que contém a main
 class Visao_Barreira {
 	
-  JButton reset = new JButton ("Reset");
-  JButton grade = new JButton ("Grade: Nula");
-  String aux;
   JFrame jan = new JFrame ("Campo");
   Draw draw = new Draw();
   Inicio in = new Inicio(draw,jan);
   Visao_Barreira vb;
+  JButton reset = new JButton ("Reset");
+  JButton grade = new JButton ("Grade: Nula");
+  String aux;
+  boolean resetboo=true;
+  boolean gradeboo=true;
+  ActionListener resetac = new ActionListener() {
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+	  
+	  resetboo=true;
+	  resett.stop();
+	  	
+	}
+	  
+  };
+  ActionListener gradeac = new ActionListener() {
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+	  
+	  gradeboo=true;
+	  gradet.stop();
+	  	
+	}
+	  
+  };
+  Timer resett;
+  Timer gradet;
   
   //Cria as instâncias e inicia o programa
   public static void main (String[] args) {
@@ -700,12 +727,21 @@ class Visao_Barreira {
 	  
 	  @Override
 	  public void actionPerformed(ActionEvent e) {
+		  
+		if (vb.resetboo) {
 		
-		vb.jan.remove(vb.draw);
-		vb.draw=new Draw();
-		vb.in = new Inicio(vb.draw,vb.jan);
-		vb.jan.add(vb.draw);
-		vb.draw.setBounds(0,0,1100,800);
+		  vb.jan.remove(vb.draw);
+		  vb.draw=new Draw();
+		  vb.in = new Inicio(vb.draw,vb.jan);
+		  vb.jan.add(vb.draw);
+		  vb.draw.setBounds(0,0,1100,800);
+		  vb.resetboo=false;
+		  
+		  vb.resetboo=false;
+	      vb.resett = new Timer(4000,vb.resetac);
+	      vb.resett.start();
+		
+	    }
 		  
 	  }
 	  	
@@ -721,23 +757,31 @@ class Visao_Barreira {
 	  
 	  @Override
 	  public void actionPerformed(ActionEvent e) {
-		
-		vb.aux = ((JButton)e.getSource()).getText();
-		
-		if (vb.aux.equalsIgnoreCase("Grade: Nula")) {
 		  
-		  ((JButton)e.getSource()).setText("Grade: C.P.");
-		  vb.draw.grade=1;
-		  vb.draw.repaint();
+		if (vb.gradeboo) {
+		
+		  vb.aux = ((JButton)e.getSource()).getText();
+		
+		  if (vb.aux.equalsIgnoreCase("Grade: Nula")) {
+		  
+		    ((JButton)e.getSource()).setText("Grade: C.P.");
+		    vb.draw.grade=1;
+		    vb.draw.repaint();
 		  	
-	    }
+	      }
 	    
-	    else if (vb.aux.equalsIgnoreCase("Grade: C.P.")) {
+	      else if (vb.aux.equalsIgnoreCase("Grade: C.P.")) {
 		  
-		  ((JButton)e.getSource()).setText("Grade: Nula");
-		  vb.draw.grade=0;
-		  vb.draw.repaint();
+		    ((JButton)e.getSource()).setText("Grade: Nula");
+		    vb.draw.grade=0;
+		    vb.draw.repaint();
 		  	
+	      }
+	      
+	      vb.gradeboo=false;
+	      vb.gradet = new Timer(2000,vb.gradeac);
+	      vb.gradet.start();
+	    
 	    }
 		  
 	  }
