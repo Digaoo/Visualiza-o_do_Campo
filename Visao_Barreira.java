@@ -68,9 +68,6 @@ class Draw extends Canvas{
   Interpola inter;
   boolean gera=false;
   int i;
-  float erro;
-  
-  boolean in=false;
   
   Draw () {
 	
@@ -396,17 +393,15 @@ class Draw extends Canvas{
 	
 	if (gera) {
 	
-	  inter = new Interpola(roboxy,bolaxy,objxy);
-	  
-	  erro=Math.abs(Math.abs((int)roboxy.x)-Math.abs(inter.funcao((int)roboxy.x)));
-	  System.out.println(roboxy.y+" "+inter.funcao((int)roboxy.x));
-	  System.out.println(bolaxy.y+" "+inter.funcao((int)bolaxy.x));
-	  System.out.println(objxy.y+" "+inter.funcao((int)objxy.x));
-	  System.out.println("-"+erro+"-");
+	  inter = new Interpola(new Point2D.Float (340,200),new Point2D.Float (560,230),new Point2D.Float (860,310));
+
+	  //System.out.println(roboxy.y+" "+inter.funcao((int)roboxy.x)+"-"+roboxy.x);
+	  //System.out.println(bolaxy.y+" "+inter.funcao((int)bolaxy.x)+"-"+bolaxy.x);
+	  //System.out.println(objxy.y+" "+inter.funcao((int)objxy.x)+"-"+objxy.x);
 	  
 	  for(i=(int)roboxy.x;i<=objxy.x;i++) {
 	    
-	    arco.add(new Quadrante(i,Math.abs(Math.abs(inter.funcao(i))-erro),0,0));
+	    arco.add(new Quadrante(i,inter.funcao(i),0,0));
 	    
 	  }
 	    
@@ -610,92 +605,53 @@ class Inicio {
 class Interpola {
 
   int i,j,k;
-  double[][] pot = new double[3][3];
-  double[] vy = new double[3];
-  double[] vx = new double[3];
-  double aux;
+  double[][] matrizX = new double[ORDEM][ORDEM];
+  double[] vetorA = new double [ORDEM];
+  double[] vetorY = new double [ORDEM];
+  double coeficiente;
+  static final int ORDEM = 3;
   
-  //Cria uma matriz formada pelas potencias dos valores em x dos pontos dados de 0 a n-1, sendo n o número de pontos dados
-  Interpola (Point2D.Float a,Point2D.Float b,Point2D.Float c) {
-	  
-	vx[0]=a.x;
-	vx[1]=b.x;
-	vx[2]=c.x;
-	
-	aux=a.x;
-	  
-	for (i=0;i<3;i++)
-	  for (j=0;j<3;j++)
-	    
-	    pot[i][j] = Math.pow(vx[i],j);
-	    
-	vy[0]=a.y;
-	vy[1]=b.y;
-	vy[2]=c.y;
+  //Cria uma matriz formada pelas potencias dos valores em x dos pontos dados de 0 a n-1, sendo n o número de pontos dado
+  Interpola(Point2D.Float robo, Point2D.Float bola, Point2D.Float objetivo){
 
-    gauss();
-	  
+    for(int i=0; i<ORDEM; i++) // completa a primeira coluna da matriz dos X's com 1.
+    
+      matrizX[i][0] = 1;
+      
+    matrizX[0][1] = robo.x; // completando a segunda coluna da matriz dos X's com a posicao x do robo.
+    matrizX[1][1] = bola.x; // completando a segunda coluna da matriz dos X's com a posicao x da bola.
+    matrizX[2][1] = objetivo.x;  // completando a segunda coluna da matriz dos X's com a posicao x do objetivo.
+    
+    for(int i=0; i<ORDEM; i++)
+    
+      matrizX[i][2] = matrizX[i][1]*matrizX[i][1]; // completa a ultima coluna da matriz dos X's com as posições x dos elementos ao quadrado.
+    
+    vetorY[0] = robo.y; // completando o vetor dos Y's com a posicao y do robo.
+    vetorY[1] = bola.y; // completando o vetor dos Y's com a posicao y da bola.
+    vetorY[2] = objetivo.y;  // completando o vetor dos Y's com a posicao y do objetivo.
+    triangulariza(); // triangulariza a matriz dos valores de X.
+    vetorA[2] = vetorY[2]/matrizX[2][2];
+    vetorA[1] = (vetorY[1] - vetorA[2]*matrizX[1][2]) / matrizX[1][1];
+    vetorA[0] = vetorY[0] - vetorA[2]*matrizX[0][2] - vetorA[1]*matrizX[0][1];
+    
   }
   
-  //Transforma a matriz em triangular superior e resolve o sistema 
-  public void gauss () {
-	
-    int n=3;
-    double m,soma;
-	
-    for(j=0;j<n;j++) {
-      for(i=j+1;i<n;i++) {
-     
-        m = pot[i][j]/ pot[j][j];
-       
-        for (k=j;k<n;k++) {
-         
-          pot[i][k]= pot[i][k]-m*pot[j][k];
-          
-        }
-        
-        vy[i]=vy[i]-m*vy[j];
-       
+  public void triangulariza(){
+
+    for(i = 0;i < ORDEM - 1 ; i++){
+      for(j = i + 1; j < ORDEM; j++){
+        coeficiente = matrizX[j][i] / matrizX[i][i];
+        for(k = i; k < ORDEM; k++)
+          matrizX[j][k] = matrizX[j][k] - coeficiente*matrizX[i][k];
       }
-      
     }
-      
-    vx[n-1]=vy[n-1]/pot[n-1][n-1];
-    
-    for(i=n-1;i>0;i--) {
-		
-      soma = 0;
-      for(j=i+1;j<n;j++) {
-      
-        soma = soma + pot[i][j]*vx[j];
-        vx[i]=(vy[i]-soma)/pot[i][i];
-      
-      } 
-       
-    }
-    
-    /*
-    for (i=0;i<3;i++)
-	    
-	    System.out.println(pot[i][0]+" "+pot[i][1]+" "+pot[i][2]);
-	    
-	for (i=0;i<3;i++)
-	    
-	    System.out.println("- "+vy[i]);
-	    
-	for (i=0;i<3;i++)
-	    
-	    System.out.println("-- "+vx[i]);
-	    
-	System.out.println("--- "+funcao(aux));
-	*/
-	  
+  
   }
   
   //Gerada a função, esse método retorna o valor da mesma para cada x dado
   public float funcao (int x) {
 	
-	return (float)vx[0]+(float)vx[1]*x+(float)vx[2]*x*x;
+	return (float)vetorA[0]+(float)vetorA[1]*x+(float)vetorA[2]*x*x;
 	
   }
   	
