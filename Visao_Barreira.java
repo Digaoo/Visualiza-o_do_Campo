@@ -20,8 +20,95 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.Timer;
 import java.awt.geom.Line2D;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 
-//colocar sistema com timer para prevenir que reset e grade sejam clicados excessivamente
+// Colocar imagens do time nos botões do menu principal
+
+//Classe que gera o menu inicial
+class Menu {
+	
+  Visao_Barreira vb;
+  GridBagConstraints gbc = new GridBagConstraints();
+  JButton func = new JButton("Gera Função");
+  JButton est = new JButton(" Estatégia ");
+  
+  Menu(Visao_Barreira v) {
+	
+	vb=v;
+	vb.jan.setLayout(new GridBagLayout());
+	gbc.fill=gbc.HORIZONTAL;
+	gbc.gridx=0;
+	gbc.gridy=0;
+	vb.jan.add(func,gbc);
+	gbc.gridy=1;
+	vb.jan.add(est,gbc);
+	vb.jan.pack();
+	listeners();
+	  
+  }
+  
+  public void listeners () {
+	
+	func.addActionListener( new ActionListener() {
+	  
+	  @Override
+	  public void actionPerformed(ActionEvent e) {
+		
+		vb.jan.setSize(new Dimension (1100,800));
+        vb.jan.setLayout(null);
+        vb.jan.remove(func);
+        vb.jan.remove(est);
+        vb.jan.add(vb.grade);
+        vb.jan.add(vb.reset);
+        vb.jan.add(vb.rmenu);
+        vb.jan.add(vb.draw);
+        vb.in.centreWindow(vb.jan);
+        vb.draw.opc=1;
+		  
+	  }
+	  
+	}); 
+	
+	est.addActionListener( new ActionListener() {
+	  
+	  @Override
+	  public void actionPerformed(ActionEvent e) {
+		
+		vb.jan.setSize(new Dimension (1100,800));
+        vb.jan.setLayout(null);
+        vb.jan.remove(func);
+        vb.jan.remove(est);
+        vb.jan.add(vb.grade);
+        vb.jan.add(vb.reset);
+        vb.jan.add(vb.rmenu);
+        vb.jan.add(vb.draw);
+        vb.in.centreWindow(vb.jan);
+        vb.draw.opc=2;
+		  
+	  }
+	  
+	}); 
+	  
+  }
+  
+  public void back () {
+	
+	
+	vb.jan.remove(vb.grade);
+    vb.jan.remove(vb.reset);
+    vb.jan.remove(vb.rmenu);
+    vb.jan.remove(vb.draw);
+	vb.jan.setLayout(new GridBagLayout());
+	gbc.gridy=0;
+	vb.jan.add(func,gbc);
+	gbc.gridy=1;
+	vb.jan.add(est,gbc);
+	vb.jan.pack();
+	
+  }
+  	
+}
 
 //Classe que faz os desenhos e trata o mouse
 class Draw extends Canvas{
@@ -31,6 +118,8 @@ class Draw extends Canvas{
   //Variaveis que controlam a distância em pixels do canto superio  esquerdo da tela
   int dx=55;
   int dy=25;
+  //Variavel que controla a opção escolhida no menu, e como o campo será utilizado
+  int opc = 0;
   //Contém os quadrados que desenham o campo
   Vector<QColor> special = new Vector<QColor>();
   //Contém os quadrados que fazem a grade da matriz, e as coordenadas
@@ -88,9 +177,12 @@ class Draw extends Canvas{
       //Recebe todas as informações do mouse
 	  void mouse(MouseEvent e) {
 		
-	    roboMouse(e);
-	    bolaMouse(e);
-	    //botaoMouse(e);
+		if (opc==1) {
+		
+	      roboMouse(e);
+	      bolaMouse(e);
+	      
+	    }
 
 	  }
 	  
@@ -135,10 +227,14 @@ class Draw extends Canvas{
       //Recebe informações de quando o mouse for clicado
 	  @Override
 	  public void mousePressed(MouseEvent e) {
+		
+		if (opc==1) {
 		  
-		posicionaObj(e);
-		posicionaBola(e);
-		posicionaRobo(e);
+		  posicionaObj(e);
+		  posicionaBola(e);
+		  posicionaRobo(e);
+		  
+		}
 	  
 	  }
 	  
@@ -149,13 +245,13 @@ class Draw extends Canvas{
 		  
 		  if (robo_area.rect.contains(e.getX(),e.getY())) {
 		  
-		    roboxy = new Point2D.Float ((int)e.getX(),(int)e.getY());
+		    roboxy = new Point2D.Float ((int)e.getX()-10,(int)e.getY()-10);
 		    
 		  }
 		  
 		  else return;
 		  
-		  robo = new QColor ((int)roboxy.x,(int)roboxy.y,20,20,new Color(100,100,100));
+		  robo = new QColor ((int)roboxy.x-10,(int)roboxy.y-10,20,20,new Color(100,100,100));
 		  roboboo=false;
 		  bolaboo=true;
 		  instrucao= new Stringco("Posicione a bola",870+dx,15+dy);
@@ -259,11 +355,17 @@ class Draw extends Canvas{
 	g2 = (Graphics2D) g;
 	
     campo(g2);
+    ajuda(g2);
+    
     if(grade==1)grid(g2);
     if(grade==2)grid2(g2);
-    ajuda(g2);
-    posicionar(g2);
-    funcao(g2);
+    
+    if(opc==1) {
+    
+      posicionar(g2);
+      funcao(g2);
+      
+    }
 	  
   }
   
@@ -739,10 +841,11 @@ class Visao_Barreira {
   Draw draw = new Draw();
   Inicio in = new Inicio(draw,jan);
   Visao_Barreira vb;
+  Menu menu ;
   JButton reset = new JButton ("Reset");
   JButton grade = new JButton ("Grade: Nula");
+  JButton rmenu = new JButton ("Voltar ao Menu");
   String aux;
-  String aux2;
   boolean resetboo=true;
   boolean gradeboo=true;
   ActionListener resetac = new ActionListener() {
@@ -776,15 +879,12 @@ class Visao_Barreira {
 	int i,j;
 	
 	Visao_Barreira vb = new Visao_Barreira();
+	vb.menu = new Menu(vb);
     
-    vb.jan.setLayout(null);
-    vb.jan.setSize(new Dimension (1100,800));
-    vb.jan.add(vb.reset);
-    vb.prep(vb.reset,vb);
-    vb.jan.add(vb.grade);
-    vb.prep2(vb.grade,vb);
-    vb.jan.add(vb.draw);
-    vb.draw.setBounds(0,0,1100,800);;
+    vb.prep(vb);
+    vb.prep2(vb);
+    vb.prep3(vb);
+    vb.draw.setBounds(0,0,1100,800);
 	vb.jan.setResizable(false);
     vb.jan.setVisible(true);
     vb.in.centreWindow(vb.jan);
@@ -792,23 +892,26 @@ class Visao_Barreira {
   }
   
   //Prepara o botão que reseta o programa
-  public static void prep (JButton reset,Visao_Barreira vb) {
+  public static void prep (Visao_Barreira vb) {
 	
 	vb.reset.addActionListener(new ActionListener() {
 	  
 	  @Override
 	  public void actionPerformed(ActionEvent e) {
+		
+		int opc;
 		  
 		if (vb.resetboo) {
 		
 		  vb.jan.remove(vb.draw);
+		  opc=vb.draw.opc;
 		  vb.draw=new Draw();
+		  vb.draw.opc=opc;
 		  vb.in = new Inicio(vb.draw,vb.jan);
 		  vb.jan.add(vb.draw);
 		  vb.draw.setBounds(0,0,1100,800);
 		  vb.resetboo=false;
 		  
-		  vb.resetboo=false;
 	      vb.resett = new Timer(4000,vb.resetac);
 	      vb.resett.start();
 		
@@ -818,11 +921,11 @@ class Visao_Barreira {
 	  	
 	});
 	
-	vb.reset.setBounds(870+vb.draw.dx,630+vb.draw.dy,161,50);
+	vb.reset.setBounds(870+vb.draw.dx,575+vb.draw.dy,161,50);
 	  
   }
   
-  public static void prep2 (JButton grade,Visao_Barreira vb) {
+  public static void prep2 (Visao_Barreira vb) {
 	
 	vb.grade.addActionListener(new ActionListener() {
 	  
@@ -867,7 +970,24 @@ class Visao_Barreira {
 	  	
 	});
 	
-	vb.grade.setBounds(870+vb.draw.dx,575+vb.draw.dy,161,50);
+	vb.grade.setBounds(870+vb.draw.dx,520+vb.draw.dy,161,50);
+	  
+  }
+  
+  public static void prep3 (Visao_Barreira vb) {
+	
+	vb.rmenu.addActionListener(new ActionListener() {
+	  
+	  @Override
+	  public void actionPerformed(ActionEvent e) {
+		
+		vb.menu.back();
+		  
+	  }
+	  	
+	});
+	
+	vb.rmenu.setBounds(870+vb.draw.dx,630+vb.draw.dy,161,50);
 	  
   }
   
