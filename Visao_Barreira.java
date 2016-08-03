@@ -149,7 +149,7 @@ class Draw extends Canvas{
 		  
 		  if (robo_area.rect.contains(e.getX(),e.getY())) {
 		  
-		    roboxy = new Point2D.Float ((int)e.getX()-10,(int)e.getY()-10);
+		    roboxy = new Point2D.Float ((int)e.getX(),(int)e.getY());
 		    
 		  }
 		  
@@ -172,7 +172,7 @@ class Draw extends Canvas{
 		  
 		  if(bola_area.rect.contains(e.getX(),e.getY())) {
 		  
-		    bolaxy = new Point2D.Float ((int)e.getX()-10,(int)e.getY()-10);
+		    bolaxy = new Point2D.Float ((int)e.getX(),(int)e.getY());
 		  
 	      }
 		  
@@ -418,7 +418,7 @@ class Draw extends Canvas{
 	
 	if (gera) {
 	
-	  inter = new Interpola(new Point2D.Float (340,200),new Point2D.Float (560,230),new Point2D.Float (860,310));
+	  inter = new Interpola(roboxy,bolaxy,objxy);
 
 	  //System.out.println(roboxy.y+" "+inter.funcao((int)roboxy.x)+"-"+roboxy.x);
 	  //System.out.println(bolaxy.y+" "+inter.funcao((int)bolaxy.x)+"-"+bolaxy.x);
@@ -707,10 +707,17 @@ class Interpola {
   public void triangulariza(){
 
     for(i = 0;i < ORDEM - 1 ; i++){
+		
       for(j = i + 1; j < ORDEM; j++){
+		  
         coeficiente = matrizX[j][i] / matrizX[i][i];
+        
         for(k = i; k < ORDEM; k++)
+          
           matrizX[j][k] = matrizX[j][k] - coeficiente*matrizX[i][k];
+        
+        vetorY[j] = vetorY[j] - coeficiente*vetorY[i];
+      
       }
     }
   
