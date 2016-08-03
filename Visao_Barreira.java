@@ -19,6 +19,7 @@ import java.awt.geom.Point2D;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.Timer;
+import java.awt.geom.Line2D;
 
 //colocar sistema com timer para prevenir que reset e grade sejam clicados excessivamente
 
@@ -28,13 +29,16 @@ class Draw extends Canvas{
   Graphics2D g2;
   
   //Variaveis que controlam a distância em pixels do canto superio  esquerdo da tela
-  int dx=30;
+  int dx=55;
   int dy=25;
   //Contém os quadrados que desenham o campo
   Vector<QColor> special = new Vector<QColor>();
   //Contém os quadrados que fazem a grade da matriz, e as coordenadas
   Vector<Quadrante> quadrantes = new Vector<Quadrante>();
   Vector<Stringco> coords = new Vector<Stringco>();
+  //Variaveis que desenham as dimensões do campo
+  Vector<Line2D.Float> medidas = new Vector<>();
+  Vector<Stringco> medidas2 = new Vector<Stringco>();
   //Parte que compõem a legenda
   Vector<QColor> legenda = new Vector<QColor>();
   Vector<Stringco> legenda2 = new Vector<Stringco>();
@@ -256,6 +260,7 @@ class Draw extends Canvas{
 	
     campo(g2);
     if(grade==1)grid(g2);
+    if(grade==2)grid2(g2);
     ajuda(g2);
     posicionar(g2);
     funcao(g2);
@@ -283,6 +288,18 @@ class Draw extends Canvas{
       g2.draw(q.rect);
       
     for (Stringco s:coords) 
+      
+      g2.drawString(s.str,s.x,s.y);
+	  
+  }
+  
+  public void grid2 (Graphics2D g2) {
+	
+	for (Line2D.Float l:medidas) 
+      
+      g2.draw(l);
+      
+    for (Stringco s:medidas2) 
       
       g2.drawString(s.str,s.x,s.y);
 	  
@@ -490,6 +507,7 @@ class Inicio {
 	this.jan=jan;
 	
 	prepGrid();
+	prepMed();
 	prepCampo();
 	prepSelecao();
 	prepLegenda();
@@ -520,6 +538,51 @@ class Inicio {
 	  else draw.coords.add(new Stringco(i+" ",draw.dx-16,draw.dy+15+20*i));
 	  
 	}
+	  
+  }
+  
+  //Prepara as linhas que ditam as dimensões das diversas partes do campo
+  public void prepMed () {
+	
+	draw.medidas.add(new Line2D.Float(draw.dx,draw.dy-5,859+draw.dx,draw.dy-5));
+	draw.medidas.add(new Line2D.Float(draw.dx,draw.dy-5,draw.dx,draw.dy-2));
+	draw.medidas.add(new Line2D.Float(859+draw.dx,draw.dy-5,859+draw.dx,draw.dy-2));
+	draw.medidas2.add(new Stringco("150 cm",408+draw.dx,draw.dy-9));
+	
+	draw.medidas.add(new Line2D.Float(draw.dx-5,draw.dy,draw.dx-5,679+draw.dy));
+	draw.medidas.add(new Line2D.Float(draw.dx-5,draw.dy,draw.dx-2,draw.dy));
+	draw.medidas.add(new Line2D.Float(draw.dx-5,679+draw.dy,draw.dx-2,679+draw.dy));
+	draw.medidas2.add(new Stringco("130 cm",draw.dx-54,340+draw.dy));
+	
+	draw.medidas.add(new Line2D.Float(draw.dx+105,draw.dy+161,draw.dx+105,draw.dy+520));
+	draw.medidas.add(new Line2D.Float(draw.dx+102,draw.dy+161,draw.dx+105,draw.dy+161));
+	draw.medidas.add(new Line2D.Float(draw.dx+102,draw.dy+520,draw.dx+105,draw.dy+520));
+	draw.medidas2.add(new Stringco("70 cm",draw.dx+106,draw.dy+340));
+	
+	draw.medidas.add(new Line2D.Float(draw.dx+25,draw.dy+240,draw.dx+25,draw.dy+440));
+	draw.medidas.add(new Line2D.Float(draw.dx+22,draw.dy+240,draw.dx+25,draw.dy+240));
+	draw.medidas.add(new Line2D.Float(draw.dx+22,draw.dy+440,draw.dx+25,draw.dy+440));
+	draw.medidas2.add(new Stringco("40 cm",draw.dx+27,draw.dy+340));
+	
+	draw.medidas.add(new Line2D.Float(draw.dx+32,draw.dy+180,draw.dx+32,draw.dy+240));
+	draw.medidas.add(new Line2D.Float(draw.dx+30,draw.dy+180,draw.dx+32,draw.dy+180));
+	draw.medidas.add(new Line2D.Float(draw.dx+30,draw.dy+240,draw.dx+32,draw.dy+240));
+	draw.medidas2.add(new Stringco("15 cm",draw.dx+34,draw.dy+213));
+	
+	draw.medidas.add(new Line2D.Float(draw.dx+29,draw.dy+520,draw.dx+29,draw.dy+659));
+	draw.medidas.add(new Line2D.Float(draw.dx+26,draw.dy+520,draw.dx+29,draw.dy+520));
+	draw.medidas.add(new Line2D.Float(draw.dx+26,draw.dy+659,draw.dx+29,draw.dy+659));
+	draw.medidas2.add(new Stringco("30 cm",draw.dx+31,draw.dy+590));
+	
+	draw.medidas.add(new Line2D.Float(draw.dx+429,draw.dy+655,draw.dx+839,draw.dy+655));
+	draw.medidas.add(new Line2D.Float(draw.dx+429,draw.dy+655,draw.dx+429,draw.dy+658));
+	draw.medidas.add(new Line2D.Float(draw.dx+839,draw.dy+655,draw.dx+839,draw.dy+658));
+	draw.medidas2.add(new Stringco("75 cm",draw.dx+613,draw.dy+651));
+	
+	draw.medidas.add(new Line2D.Float(draw.dx+835,draw.dy+20,draw.dx+835,draw.dy+239));
+	draw.medidas.add(new Line2D.Float(draw.dx+835,draw.dy+20,draw.dx+838,draw.dy+20));
+	draw.medidas.add(new Line2D.Float(draw.dx+835,draw.dy+239,draw.dx+838,draw.dy+239));
+	draw.medidas2.add(new Stringco("45 cm",draw.dx+796,draw.dy+123));
 	  
   }
   
@@ -672,6 +735,7 @@ class Visao_Barreira {
   JButton reset = new JButton ("Reset");
   JButton grade = new JButton ("Grade: Nula");
   String aux;
+  String aux2;
   boolean resetboo=true;
   boolean gradeboo=true;
   ActionListener resetac = new ActionListener() {
@@ -747,7 +811,7 @@ class Visao_Barreira {
 	  	
 	});
 	
-	vb.reset.setBounds(870+vb.draw.dx,440+vb.draw.dy,161,50);
+	vb.reset.setBounds(870+vb.draw.dx,630+vb.draw.dy,161,50);
 	  
   }
   
@@ -769,8 +833,16 @@ class Visao_Barreira {
 		    vb.draw.repaint();
 		  	
 	      }
-	    
+	      
 	      else if (vb.aux.equalsIgnoreCase("Grade: C.P.")) {
+		  
+		    ((JButton)e.getSource()).setText("Grade: Medidas");
+		    vb.draw.grade=2;
+		    vb.draw.repaint();
+		  	
+	      }
+	      
+	      else if (vb.aux.equalsIgnoreCase("Grade: Medidas")) {
 		  
 		    ((JButton)e.getSource()).setText("Grade: Nula");
 		    vb.draw.grade=0;
@@ -779,7 +851,7 @@ class Visao_Barreira {
 	      }
 	      
 	      vb.gradeboo=false;
-	      vb.gradet = new Timer(2000,vb.gradeac);
+	      vb.gradet = new Timer(1000,vb.gradeac);
 	      vb.gradet.start();
 	    
 	    }
@@ -788,7 +860,7 @@ class Visao_Barreira {
 	  	
 	});
 	
-	vb.grade.setBounds(870+vb.draw.dx,493+vb.draw.dy,161,50);
+	vb.grade.setBounds(870+vb.draw.dx,575+vb.draw.dy,161,50);
 	  
   }
   
