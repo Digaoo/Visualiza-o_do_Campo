@@ -697,7 +697,7 @@ class Interpola {
     vetorY[1] = robo.y; // completando o vetor dos Y's com a posicao y do robo.
     vetorY[0] = bola.y; // completando o vetor dos Y's com a posicao y da bola.
     vetorY[2] = objetivo.y;  // completando o vetor dos Y's com a posicao y do objetivo.
-    triangulariza(); // triangulariza a matriz dos valores de X.
+    triangulariza(); // triangulariza a matriz dos valores de X e Y.
     vetorA[2] = vetorY[2]/matrizX[2][2];
     vetorA[1] = (vetorY[1] - vetorA[2]*matrizX[1][2]) / matrizX[1][1];
     vetorA[0] = vetorY[0] - vetorA[2]*matrizX[0][2] - vetorA[1]*matrizX[0][1];
@@ -711,6 +711,7 @@ class Interpola {
         coeficiente = matrizX[j][i] / matrizX[i][i];
         for(k = i; k < ORDEM; k++)
           matrizX[j][k] = matrizX[j][k] - coeficiente*matrizX[i][k];
+        vetorY[j] = vetorY[j] - coeficiente*vetorY[i];
       }
     }
   
