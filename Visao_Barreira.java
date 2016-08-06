@@ -30,8 +30,6 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
-// Colocar imagens do time nos botões do menu principal
-
 //Classe que gera o menu inicial
 class Menu {
 	
@@ -174,6 +172,11 @@ class Draw extends Canvas{
   Ellipse2D.Float bola;
   Point2D.Float objxy;
   QColor objetivo;
+  //Variáveis para cria a area de selação da estratégia
+  Vector<Quadrante> selecao = new Vector<Quadrante>();
+  Quadrante buffer;
+  QColor buffer2;
+  boolean selecionando=false;
   //Listener do mouse e auxiliares
   MouseAdapter mouseAdapter;
   int px,py;
@@ -248,6 +251,14 @@ class Draw extends Canvas{
 		  posicionaBola(e);
 		  posicionaRobo(e);
 		  
+		}
+		
+		else if (opc==2) {
+		  
+		  selecionando=true;
+		  px=e.getX();
+		  py=e.getY();
+		  	
 		}
 	  
 	  }
@@ -341,7 +352,21 @@ class Draw extends Canvas{
 	  @Override
 	  public void mouseDragged(MouseEvent e) {
 		
-		mouse(e);
+		if (opc==2) {
+		  
+		  if (px<e.getX()&&py<e.getY()) buffer = new Quadrante (px,py,e.getX()-px,e.getY()-py);
+		  
+		  else if (px<e.getX()&&py>e.getY()) buffer = new Quadrante (px,e.getY(),e.getX()-px,py-e.getY());
+		  
+		  else if (px>e.getX()&&py<e.getY()) buffer = new Quadrante (e.getX(),py,px-e.getX(),e.getY()-py);
+		  
+		  else if (px>e.getX()&&py>e.getY()) buffer = new Quadrante (e.getX(),e.getY(),px-e.getX(),py-e.getY());
+		  
+		  buffer2 = new QColor ((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height,new Color (255,153,51,220));
+		  
+		  repaint();
+		  
+	    }  
 			
 	  }
       
@@ -349,7 +374,12 @@ class Draw extends Canvas{
 	  @Override
 	  public void mouseReleased(MouseEvent e) {
 		 
-		mouse(e);
+		if (opc==2&&buffer!=null) {
+		  
+		  selecionando=false;
+		  selecao.add(new Quadrante((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height));
+		  
+	    }
 	  
 	  }
 	  
@@ -379,6 +409,12 @@ class Draw extends Canvas{
       posicionar(g2);
       funcao(g2);
       
+    }
+    
+    else if (opc==2) {
+	  
+	  select(g2);
+	  
     }
 	  
   }
@@ -536,10 +572,6 @@ class Draw extends Canvas{
 	if (gera) {
 	
 	  inter = new Interpola(roboxy,bolaxy,objxy);
-
-	  //System.out.println(roboxy.y+" "+inter.funcao((int)roboxy.x)+"-"+roboxy.x);
-	  //System.out.println(bolaxy.y+" "+inter.funcao((int)bolaxy.x)+"-"+bolaxy.x);
-	  //System.out.println(objxy.y+" "+inter.funcao((int)objxy.x)+"-"+objxy.x);
 	  
 	  for(i=(int)roboxy.x;i<=objxy.x;i++) {
 	    
@@ -555,8 +587,33 @@ class Draw extends Canvas{
 	
 	  for (Quadrante q:arco) 
       
-      g2.draw(q.rect);
+        g2.draw(q.rect);
 	  
+  }
+  
+  //Desenha as áreas de seleção da estratégia
+  public void select (Graphics2D g2) {
+    
+    if(buffer!=null) {
+    
+      g2.draw(buffer.rect);
+      g2.setColor(new Color(255,153,51,220));
+	  g2.fillRect((int)buffer2.x+1,(int)buffer2.y+1,(int)buffer2.w-1,(int)buffer2.h-1);
+	  g2.setColor(getForeground());
+      
+    }
+    
+    if(!selecao.isEmpty())
+    
+      for (Quadrante q:selecao) { 
+      
+        g2.draw(q.rect);
+        g2.setColor(new Color(255,153,51,220));
+	    g2.fillRect((int)q.rect.x+1,(int)q.rect.y+1,(int)q.rect.width-1,(int)q.rect.height-1);
+	    g2.setColor(getForeground());
+        
+      }
+    
   }
   	
 }
@@ -729,17 +786,17 @@ class Inicio {
   //Prepara o desenho das áreas de seleção
   public void prepSelecao() {
 	  
-	draw.area_robo.add(new QColor (7,2,13*20,30*20,new Color (0,255,100)));
+	draw.area_robo.add(new QColor (7,2,13*20,30*20,new Color (0,255,100,220)));
 	draw.robo_area = new Quadrante (7*20+draw.dx,2*20+draw.dy,13*20,30*20);
 	    
-	draw.area_bola.add(new QColor (23,3,14*20,28*20,new Color (0,255,100)));
+	draw.area_bola.add(new QColor (23,3,14*20,28*20,new Color (0,255,100,220)));
 	draw.bola_area = new Quadrante (23*20+draw.dx,3*20+draw.dy,14*20,28*20);
 	
-	draw.area_gol.add(new QColor (42,12,20,5*20,new Color (0,255,100)));
-	draw.area_gol.add(new QColor (42,17,20,5*20,new Color (0,255,100)));
+	draw.area_gol.add(new QColor (42,12,20,5*20,new Color (0,255,100,220)));
+	draw.area_gol.add(new QColor (42,17,20,5*20,new Color (0,255,100,220)));
 	    
-	draw.gol_esq = new Quadrante (42*20+draw.dx,12*20+draw.dy,19,5*20);
-	draw.gol_dir = new Quadrante (42*20+draw.dx,17*20+draw.dy,19,5*20);
+	draw.gol_esq = new Quadrante (42*20+draw.dx,12*20+draw.dy,20,5*20);
+	draw.gol_dir = new Quadrante (42*20+draw.dx,17*20+draw.dy,20,5*20);
 	  
   }
   
