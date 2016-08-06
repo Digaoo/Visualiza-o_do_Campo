@@ -22,6 +22,13 @@ import javax.swing.Timer;
 import java.awt.geom.Line2D;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import javax.swing.ImageIcon;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 
 // Colocar imagens do time nos botões do menu principal
 
@@ -30,20 +37,27 @@ class Menu {
 	
   Visao_Barreira vb;
   GridBagConstraints gbc = new GridBagConstraints();
-  JButton func = new JButton("Gera Função");
-  JButton est = new JButton(" Estatégia ");
+  ImageIcon icone = new ImageIcon (getClass().getResource("botao_carrossel.png"));
+  JButton func = new JButton("Gera Função",icone);
+  JButton est = new JButton(" Estatégia ",icone);
+  Color c;
   
   Menu(Visao_Barreira v) {
 	
 	vb=v;
+	c=vb.jan.getContentPane().getBackground();
+	vb.jan.getContentPane().setBackground(new Color(170,0,170));
 	vb.jan.setLayout(new GridBagLayout());
 	gbc.fill=gbc.HORIZONTAL;
 	gbc.gridx=0;
 	gbc.gridy=0;
+	gbc.insets = new Insets(50,0,50,0);
 	vb.jan.add(func,gbc);
+	func.setPreferredSize(new Dimension (300,100));
 	gbc.gridy=1;
 	vb.jan.add(est,gbc);
-	vb.jan.pack();
+	est.setPreferredSize(new Dimension (300,100));
+	vb.jan.setSize(new Dimension (1100,800));
 	listeners();
 	  
   }
@@ -55,7 +69,7 @@ class Menu {
 	  @Override
 	  public void actionPerformed(ActionEvent e) {
 		
-		vb.jan.setSize(new Dimension (1100,800));
+		vb.jan.getContentPane().setBackground(c);
         vb.jan.setLayout(null);
         vb.jan.remove(func);
         vb.jan.remove(est);
@@ -75,7 +89,7 @@ class Menu {
 	  @Override
 	  public void actionPerformed(ActionEvent e) {
 		
-		vb.jan.setSize(new Dimension (1100,800));
+		vb.jan.getContentPane().setBackground(c);
         vb.jan.setLayout(null);
         vb.jan.remove(func);
         vb.jan.remove(est);
@@ -94,7 +108,8 @@ class Menu {
   
   public void back () {
 	
-	
+	vb.jan.getContentPane().setBackground(new Color(170,0,170));
+	vb.draw.opc=0;
 	vb.jan.remove(vb.grade);
     vb.jan.remove(vb.reset);
     vb.jan.remove(vb.rmenu);
@@ -104,7 +119,6 @@ class Menu {
 	vb.jan.add(func,gbc);
 	gbc.gridy=1;
 	vb.jan.add(est,gbc);
-	vb.jan.pack();
 	
   }
   	
@@ -358,7 +372,7 @@ class Draw extends Canvas{
     ajuda(g2);
     
     if(grade==1)grid(g2);
-    if(grade==2)grid2(g2);
+    else if(grade==2)grid2(g2);
     
     if(opc==1) {
     
@@ -395,6 +409,7 @@ class Draw extends Canvas{
 	  
   }
   
+  //Desenha as medidas do campo
   public void grid2 (Graphics2D g2) {
 	
 	for (Line2D.Float l:medidas) 
@@ -838,6 +853,7 @@ class Interpola {
 class Visao_Barreira {
 	
   JFrame jan = new JFrame ("Campo");
+  BufferedImage img=null;
   Draw draw = new Draw();
   Inicio in = new Inicio(draw,jan);
   Visao_Barreira vb;
@@ -879,6 +895,16 @@ class Visao_Barreira {
 	int i,j;
 	
 	Visao_Barreira vb = new Visao_Barreira();
+	
+	try {
+		
+	  vb.img = ImageIO.read(new File("botao_carrossel.png"));
+      
+    } 
+    catch (IOException e) {
+      System.out.println("Não Carrego");
+    }
+	
 	vb.menu = new Menu(vb);
     
     vb.prep(vb);
@@ -886,6 +912,7 @@ class Visao_Barreira {
     vb.prep3(vb);
     vb.draw.setBounds(0,0,1100,800);
 	vb.jan.setResizable(false);
+	vb.jan.setIconImage(vb.img);
     vb.jan.setVisible(true);
     vb.in.centreWindow(vb.jan);
     
