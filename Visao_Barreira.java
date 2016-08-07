@@ -173,10 +173,12 @@ class Draw extends Canvas{
   Point2D.Float objxy;
   QColor objetivo;
   //Variáveis para cria a area de selação da estratégia
+  Quadrante campo = new Quadrante(dx+20,dy+20,41*20,32*20);
   Vector<Quadrante> selecao = new Vector<Quadrante>();
   Quadrante buffer;
   QColor buffer2;
   boolean selecionando=false;
+  boolean proceed=true;
   //Listener do mouse e auxiliares
   MouseAdapter mouseAdapter;
   int px,py;
@@ -255,9 +257,9 @@ class Draw extends Canvas{
 		
 		else if (opc==2) {
 		  
-		  selecionando=true;
-		  px=e.getX();
-		  py=e.getY();
+		    selecionando=true;
+		    px=e.getX();
+		    py=e.getY();
 		  	
 		}
 	  
@@ -353,18 +355,32 @@ class Draw extends Canvas{
 	  public void mouseDragged(MouseEvent e) {
 		
 		if (opc==2) {
+			
+		  for (Quadrante q:selecao) {
+			
+			if (q.rect.contains(e.getX(),e.getY())||q.rect.intersects(buffer.rect.x,buffer.rect.y,buffer.rect.width+1,buffer.rect.height+1))
+			  
+			  proceed=false;
+			  
+		  }
 		  
-		  if (px<e.getX()&&py<e.getY()) buffer = new Quadrante (px,py,e.getX()-px,e.getY()-py);
+		  if (proceed) {
 		  
-		  else if (px<e.getX()&&py>e.getY()) buffer = new Quadrante (px,e.getY(),e.getX()-px,py-e.getY());
+		    if (px<e.getX()&&py<e.getY()) buffer = new Quadrante (px,py,e.getX()-px,e.getY()-py);
 		  
-		  else if (px>e.getX()&&py<e.getY()) buffer = new Quadrante (e.getX(),py,px-e.getX(),e.getY()-py);
+		    else if (px<e.getX()&&py>e.getY()) buffer = new Quadrante (px,e.getY(),e.getX()-px,py-e.getY());
 		  
-		  else if (px>e.getX()&&py>e.getY()) buffer = new Quadrante (e.getX(),e.getY(),px-e.getX(),py-e.getY());
+		    else if (px>e.getX()&&py<e.getY()) buffer = new Quadrante (e.getX(),py,px-e.getX(),e.getY()-py);
 		  
-		  buffer2 = new QColor ((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height,new Color (255,153,51,220));
+		    else if (px>e.getX()&&py>e.getY()) buffer = new Quadrante (e.getX(),e.getY(),px-e.getX(),py-e.getY());
 		  
-		  repaint();
+		    if(buffer!=null)buffer2 = new QColor ((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height,new Color (255,153,51,220));
+		  
+		    repaint(dx+20,dy+20,41*20,32*20);
+		  
+	      }
+	      
+	      proceed=true;
 		  
 	    }  
 			
@@ -376,8 +392,10 @@ class Draw extends Canvas{
 		 
 		if (opc==2&&buffer!=null) {
 		  
+		  proceed=true;
 		  selecionando=false;
 		  selecao.add(new Quadrante((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height));
+		  buffer=new Quadrante(0,0,0,0);
 		  
 	    }
 	  
