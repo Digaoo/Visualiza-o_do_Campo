@@ -40,6 +40,7 @@ class Menu {
   JButton est = new JButton(" Estatégia ",icone);
   Color c;
   
+  //Prepara a tela inicial do menu
   Menu(Visao_Barreira v) {
 	
 	vb=v;
@@ -60,6 +61,7 @@ class Menu {
 	  
   }
   
+  //Prepara as ações dos botões do menu
   public void listeners () {
 	
 	func.addActionListener( new ActionListener() {
@@ -104,6 +106,7 @@ class Menu {
 	  
   }
   
+  //Faz as preparações para retornar ao menu após ja ter ido adiante
   public void back () {
 	
 	vb.jan.getContentPane().setBackground(new Color(170,0,170));
@@ -175,10 +178,11 @@ class Draw extends Canvas{
   //Variáveis para cria a area de selação da estratégia
   Quadrante campo = new Quadrante(dx+20,dy+20,41*20,32*20);
   Vector<Quadrante> selecao = new Vector<Quadrante>();
-  Quadrante buffer;
+  Quadrante buffer=new Quadrante(dx+50,dy+50,1,1);
   QColor buffer2;
   boolean selecionando=false;
   boolean proceed=true;
+  int h=0,w=0;
   //Listener do mouse e auxiliares
   MouseAdapter mouseAdapter;
   int px,py;
@@ -256,11 +260,9 @@ class Draw extends Canvas{
 		}
 		
 		else if (opc==2) {
-		  
-		    selecionando=true;
-		    px=e.getX();
-		    py=e.getY();
-		  	
+		    
+		  restringeCampo (e);  
+			  	
 		}
 	  
 	  }
@@ -342,6 +344,84 @@ class Draw extends Canvas{
 		
 	  }
 	  
+	  //Restinge a criação de áreas de seleção ao campo
+	  public void restringeCampo (MouseEvent e) {
+		  
+		int aux;
+		  
+		selecionando=true;
+		
+		if (campo.rect.contains(e.getX(),e.getY())) {
+		    
+		  px=e.getX();
+		  py=e.getY();
+		      
+		}
+		    
+		else {
+			  
+		  aux=campo.rect.outcode(e.getX(),e.getY());
+			  
+		  if(aux==Rectangle2D.OUT_TOP) {
+				
+		    px=e.getX();
+			py=e.getY()+(20+dy-e.getY());
+				  
+		  }
+			  
+		  else if (aux==Rectangle2D.OUT_LEFT) {
+			    
+			px=e.getX()+(20+dx-e.getX());
+		    py=e.getY();
+			    
+		  }
+			  
+		  else if (aux==Rectangle2D.OUT_BOTTOM) {
+			    
+			px=e.getX();
+		    py=e.getY()-(int)(e.getY()-(campo.rect.y+campo.rect.height));
+			  
+		  }
+			  
+		  else if (aux==Rectangle2D.OUT_RIGHT) {
+			    
+			px=e.getX()-(int)(e.getX()-(campo.rect.x+campo.rect.width));
+		    py=e.getY();
+			    
+		  }
+			  
+		  else if (aux==Rectangle2D.OUT_TOP+Rectangle2D.OUT_LEFT) {
+			    
+			px=e.getX()+(20+dx-e.getX());
+		    py=e.getY()+(20+dy-e.getY());
+			    
+		  }
+			  
+		  else if (aux==Rectangle2D.OUT_TOP+Rectangle2D.OUT_RIGHT) {
+			    
+			px=e.getX()-(int)(e.getX()-(campo.rect.x+campo.rect.width));
+		    py=e.getY()+(20+dy-e.getY());
+			    
+		  }
+			  
+		  else if (aux==Rectangle2D.OUT_BOTTOM+Rectangle2D.OUT_LEFT) {
+			    
+			px=e.getX()+(20+dx-e.getX());
+		    py=e.getY()-(int)(e.getY()-(campo.rect.y+campo.rect.height));
+			    
+		  }
+			  
+		  else if (aux==Rectangle2D.OUT_BOTTOM+Rectangle2D.OUT_RIGHT) {
+			    
+			px=e.getX()-(int)(e.getX()-(campo.rect.x+campo.rect.width));
+		    py=e.getY()-(int)(e.getY()-(campo.rect.y+campo.rect.height));
+			    
+		  }
+		  
+	    }
+	    
+	  }
+	  
 	  //Recebe informações de quando o mouse for movido
 	  @Override
 	  public void mouseMoved(MouseEvent e) {
@@ -356,34 +436,94 @@ class Draw extends Canvas{
 		
 		if (opc==2) {
 			
-		  for (Quadrante q:selecao) {
-			
-			if (q.rect.contains(e.getX(),e.getY())||q.rect.intersects(buffer.rect.x,buffer.rect.y,buffer.rect.width+1,buffer.rect.height+1))
-			  
-			  proceed=false;
-			  
-		  }
-		  
-		  if (proceed) {
-		  
-		    if (px<e.getX()&&py<e.getY()) buffer = new Quadrante (px,py,e.getX()-px,e.getY()-py);
-		  
-		    else if (px<e.getX()&&py>e.getY()) buffer = new Quadrante (px,e.getY(),e.getX()-px,py-e.getY());
-		  
-		    else if (px>e.getX()&&py<e.getY()) buffer = new Quadrante (e.getX(),py,px-e.getX(),e.getY()-py);
-		  
-		    else if (px>e.getX()&&py>e.getY()) buffer = new Quadrante (e.getX(),e.getY(),px-e.getX(),py-e.getY());
-		  
-		    if(buffer!=null)buffer2 = new QColor ((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height,new Color (255,153,51,220));
-		  
-		    repaint(dx+20,dy+20,41*20,32*20);
-		  
-	      }
-	      
-	      proceed=true;
+		  criaSelecao(e);
 		  
 	    }  
 			
+	  }
+	  
+	  //Controla a criação da área de seleção
+	  public void criaSelecao (MouseEvent e) {
+		  
+		h=e.getY();
+		w=e.getX();
+		  
+		if (!campo.rect.contains(w,h)) {
+
+		  restringeCampo2();
+		  	
+		}
+		
+		//for (Quadrante q:selecao) {
+			
+	      //if (q.rect.contains(e.getX(),e.getY())||q.rect.intersects(buffer.rect.x,buffer.rect.y,buffer.rect.width+1,buffer.rect.height+1))
+			  
+		  //proceed=false;
+			  
+		//}
+		  
+		//if (proceed) {
+			
+		  
+		  if (px<w&&py<h) buffer = new Quadrante (px,py,w-px,h-py);
+		  
+		  else if (px<w&&py>h) buffer = new Quadrante (px,h,w-px,py-h);
+		  
+		  else if (px>w&&py<h) buffer = new Quadrante (w,py,px-w,h-py);
+		  
+		  else if (px>w&&py>h) buffer = new Quadrante (w,h,px-w,py-h);
+		  
+	    //}
+	    
+	    if(buffer!=null)buffer2 = new QColor ((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height,new Color (255,153,51,220));
+		  
+		repaint(dx+20,dy+20,41*20,32*20);
+	      
+	    proceed=true;
+		  
+	  }
+	  
+	  //Restringe o crescimento da área de seleção
+	  public void restringeCampo2 () {
+		  
+		int aux=campo.rect.outcode(w,h);
+			  
+		if(aux==Rectangle2D.OUT_TOP) h = (int)campo.rect.y+1;
+			  
+		else if (aux==Rectangle2D.OUT_LEFT) w = (int)campo.rect.x+1;
+			  
+		else if (aux==Rectangle2D.OUT_BOTTOM) h = (int)(campo.rect.y+campo.rect.height)-1;
+			  
+		else if (aux==Rectangle2D.OUT_RIGHT) w = (int)(campo.rect.x+campo.rect.width)-1;
+			  
+		else if (aux==Rectangle2D.OUT_TOP+Rectangle2D.OUT_LEFT) {
+			    
+	      h = (int)campo.rect.y+1;
+	      w = (int)campo.rect.x+1;
+			    
+		}
+			  
+		else if (aux==Rectangle2D.OUT_TOP+Rectangle2D.OUT_RIGHT) {
+			    
+	      h = (int)campo.rect.y+1;
+	      w = (int)(campo.rect.x+campo.rect.width)-1;
+			    
+		}
+			  
+		else if (aux==Rectangle2D.OUT_BOTTOM+Rectangle2D.OUT_LEFT) {
+			    
+		  h = (int)(campo.rect.y+campo.rect.height)-1;
+		  w = (int)campo.rect.x+1;
+			    
+		}
+			  
+		else if (aux==Rectangle2D.OUT_BOTTOM+Rectangle2D.OUT_RIGHT) {
+			    
+		  h = (int)(campo.rect.y+campo.rect.height)-1;
+		  w = (int)(campo.rect.x+campo.rect.width)-1;
+			    
+		}
+	    
 	  }
       
       //Recebe informações de quando o botão do mouse for solto
@@ -392,13 +532,20 @@ class Draw extends Canvas{
 		 
 		if (opc==2&&buffer!=null) {
 		  
-		  proceed=true;
-		  selecionando=false;
-		  selecao.add(new Quadrante((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height));
-		  buffer=new Quadrante(0,0,0,0);
+		  fimSelecao(e);
 		  
 	    }
 	  
+	  }
+	  
+	  //Finaliza a criação da área de seleção
+	  public void fimSelecao (MouseEvent e) {
+		
+		proceed=true;
+		selecionando=false;
+		selecao.add(new Quadrante((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height));
+		buffer=new Quadrante(dx+20,dy+20,0,0);
+		  
 	  }
 	  
     };
@@ -612,7 +759,7 @@ class Draw extends Canvas{
   //Desenha as áreas de seleção da estratégia
   public void select (Graphics2D g2) {
     
-    if(buffer!=null) {
+    if(buffer.rect.width>1&&buffer.rect.height>1) {
     
       g2.draw(buffer.rect);
       g2.setColor(new Color(255,153,51,220));
@@ -896,6 +1043,7 @@ class Interpola {
     
   }
   
+  //Faz a triangularização da matriz para resolver o sistema
   public void triangulariza(){
 
     for(i = 0;i < ORDEM - 1 ; i++){
@@ -926,13 +1074,15 @@ class Interpola {
 
 //Classe que contém a main
 class Visao_Barreira {
-	
+
+  //Variáveis base que iniciam o programa
   JFrame jan = new JFrame ("Campo");
   BufferedImage img=null;
   Draw draw = new Draw();
   Inicio in = new Inicio(draw,jan);
   Visao_Barreira vb;
   Menu menu ;
+  //Variáveis que auxiliam no funcionamento dos botões
   JButton reset = new JButton ("Reset");
   JButton grade = new JButton ("Grade: Nula");
   JButton rmenu = new JButton ("Voltar ao Menu");
@@ -1027,6 +1177,7 @@ class Visao_Barreira {
 	  
   }
   
+  //Prepara o botão que desenha as grades do campo
   public static void prep2 (Visao_Barreira vb) {
 	
 	vb.grade.addActionListener(new ActionListener() {
@@ -1076,6 +1227,7 @@ class Visao_Barreira {
 	  
   }
   
+  //Prepara o botão que volta ao menu
   public static void prep3 (Visao_Barreira vb) {
 	
 	vb.rmenu.addActionListener(new ActionListener() {
