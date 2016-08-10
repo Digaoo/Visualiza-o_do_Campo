@@ -29,6 +29,14 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.lang.StringBuilder;
+
+//Tentar possibilitar ajuste de seleção já feita
+//Tentar impedir a seleção de áreas já selecionadas
+//Adaptar instrução para opção escolhida no menu
+//Adaptar restrição do mouse na área do robo para restringeCampo2
 
 //Classe que gera o menu inicial
 class Menu {
@@ -47,6 +55,7 @@ class Menu {
 	c=vb.jan.getContentPane().getBackground();
 	vb.jan.getContentPane().setBackground(new Color(170,0,170));
 	vb.jan.setLayout(new GridBagLayout());
+	vb.draw.addKeyListener(new Teclado(vb.draw));
 	gbc.fill=gbc.HORIZONTAL;
 	gbc.gridx=0;
 	gbc.gridy=0;
@@ -79,6 +88,7 @@ class Menu {
         vb.jan.add(vb.draw);
         vb.in.centreWindow(vb.jan);
         vb.draw.opc=1;
+        vb.draw.requestFocusInWindow();
 		  
 	  }
 	  
@@ -96,9 +106,12 @@ class Menu {
         vb.jan.add(vb.grade);
         vb.jan.add(vb.reset);
         vb.jan.add(vb.rmenu);
+        vb.jan.add(vb.elem);
+        vb.jan.add(vb.last);
         vb.jan.add(vb.draw);
         vb.in.centreWindow(vb.jan);
         vb.draw.opc=2;
+        vb.draw.requestFocusInWindow();
 		  
 	  }
 	  
@@ -175,17 +188,27 @@ class Draw extends Canvas{
   Ellipse2D.Float bola;
   Point2D.Float objxy;
   QColor objetivo;
-  //Variáveis para cria a area de selação da estratégia
+  //Variáveis para cria a area de seleção da estratégia
   Quadrante campo = new Quadrante(dx+20,dy+20,41*20,32*20);
+  Quadrante campo2 = new Quadrante(dx+30,dy+30,(41*20)-19,(32*20)-19);
   Vector<Quadrante> selecao = new Vector<Quadrante>();
   Quadrante buffer=new Quadrante(dx+50,dy+50,1,1);
   QColor buffer2;
   boolean selecionando=false;
-  boolean proceed=true;
   int h=0,w=0;
+  int enter = 0;
+  //Variáveis para funcionamento da seleção e mudança da legenda na estratégia
+  Rectangle2D.Float legselect = new Rectangle2D.Float (875+dx,250+dy,150,30);
+  boolean legselectboo=false;
+  int escolha=0;
+  //Variáveis para controle do posicionamento de elementos na estratégia
+  int elemento=0;
+  Vector<QColor> robos = new Vector<QColor>();
+  Vector<Ellipse2D.Float> bolas = new Vector<Ellipse2D.Float>();
   //Listener do mouse e auxiliares
   MouseAdapter mouseAdapter;
   int px,py;
+  Visao_Barreira vb;
   //Variáveis para funcinamento da geração de função
   Interpola inter;
   boolean gera=false;
@@ -193,60 +216,12 @@ class Draw extends Canvas{
   //Variavel para controle da grade
   int grade=0;
   
-  Draw () {
+  Draw (Visao_Barreira v) {
+	  
+    vb=v;
 	
 	mouseAdapter = new MouseAdapter() {
-
-      //Recebe todas as informações do mouse
-	  void mouse(MouseEvent e) {
-		
-		if (opc==1) {
-		
-	      roboMouse(e);
-	      bolaMouse(e);
-	      
-	    }
-
-	  }
 	  
-	  //Mantém o robo seguindo o mouse
-	  public void roboMouse (MouseEvent e) {
-		
-		if (roboboo&&robo_area.rect.contains(e.getX(),e.getY())) {
-		  
-		  aux = new QColor (e.getX()-10,e.getY()-10,20,20,new Color(100,100,100));
-		  
-		  if (px!=e.getX()||py!=e.getY()) {
-		  
-		    repaint (px-10,py-10,40,40);
-		    px=e.getX();
-		    py=e.getY();
-		  
-	      }
-		
-	    }
-		  
-	  }
-	  
-	  //Mantém a bola seguindo o mouse
-	  public void bolaMouse (MouseEvent e) {
-		
-		if (bolaboo&&bola_area.rect.contains(e.getX(),e.getY())) {
-		  
-		  aux2 = new Ellipse2D.Float (e.getX()-10,e.getY()-10,20,20);
-		  
-		  if (px!=e.getX()||py!=e.getY()) {
-		  
-		    repaint (px-10,py-10,40,40);
-		    px=e.getX();
-		    py=e.getY();
-		  
-	      }
-		
-	    }
-		  
-	  }
-      
       //Recebe informações de quando o mouse for clicado
 	  @Override
 	  public void mousePressed(MouseEvent e) {
@@ -261,7 +236,11 @@ class Draw extends Canvas{
 		
 		else if (opc==2) {
 		    
-		  restringeCampo (e);  
+		  if(elemento==0) restringeCampo (e);
+		  
+		  else if (elemento==1) elemRoboFinal(e);
+		  
+		  else if (elemento==2) elemBolaFinal(e);
 			  	
 		}
 	  
@@ -422,11 +401,122 @@ class Draw extends Canvas{
 	    
 	  }
 	  
+	  public void elemRoboFinal (MouseEvent e) {
+		  
+		QColor temp = aux;
+		
+		robos.add(temp);
+		elemento=0;
+		vb.elem.setText("Colocar Elemento");
+		  
+	  }
+	  
+	  public void elemBolaFinal (MouseEvent e) {
+		  
+		Ellipse2D.Float temp = aux2;
+		
+		bolas.add(temp);
+		elemento=0;
+		vb.elem.setText("Colocar Elemento");
+		  
+	  }
+	  
 	  //Recebe informações de quando o mouse for movido
 	  @Override
 	  public void mouseMoved(MouseEvent e) {
 	  
-		mouse(e);
+		if (opc==1) {
+		
+	      roboMouse(e);
+	      bolaMouse(e);
+	      
+	    }
+	    
+	    else if (opc==2) {
+		  
+		  if (elemento==1) elementoRobo(e);
+		  
+		  else if (elemento==2) elementoBola(e);
+		  	
+		}
+		
+	  }
+      
+      //Mantém o robo seguindo o mouse
+	  public void roboMouse (MouseEvent e) {
+		
+		if (roboboo&&robo_area.rect.contains(e.getX(),e.getY())) {
+		  
+		  aux = new QColor (e.getX()-10,e.getY()-10,20,20,new Color(100,100,100));
+		  
+		  if (px!=e.getX()||py!=e.getY()) {
+		  
+		    repaint (px-10,py-10,40,40);
+		    px=e.getX();
+		    py=e.getY();
+		  
+	      }
+		
+	    }
+		  
+	  }
+	  
+	  //Mantém a bola seguindo o mouse
+	  public void bolaMouse (MouseEvent e) {
+		
+		if (bolaboo&&bola_area.rect.contains(e.getX(),e.getY())) {
+		  
+		  aux2 = new Ellipse2D.Float (e.getX()-10,e.getY()-10,20,20);
+		  
+		  if (px!=e.getX()||py!=e.getY()) {
+		  
+		    repaint (px-10,py-10,40,40);
+		    px=e.getX();
+		    py=e.getY();
+		  
+	      }
+		
+	    }
+		  
+	  }
+      
+      //Método que faz o posicionamento do robo na estratégia
+      public void elementoRobo(MouseEvent e) {
+		  
+		h=e.getY();
+		w=e.getX();
+		  
+		if (!campo2.rect.contains(w,h)) restringeCampo2(campo2);
+		  
+		aux = new QColor (w-10,h-10,20,20,new Color(100,100,100));
+		  
+		if (px!=w||py!=h) {
+		  
+		  repaint (dx+20,dy+20,41*20,32*20);
+		  px=w;
+		  py=h;
+		  
+	    }
+		
+	  }
+      
+      //Método que faz o posicionamento da bola na estratégia
+      public void elementoBola(MouseEvent e) {
+		  
+		h=e.getY();
+		w=e.getX();
+		  
+		if (!campo2.rect.contains(w,h)) restringeCampo2(campo2);
+		  
+		aux2 = new Ellipse2D.Float (w-10,h-10,20,20);
+		  
+		if (px!=w||py!=h) {
+		  
+		  repaint (dx+20,dy+20,41*20,32*20);
+		  px=w;
+		  py=h;
+		  
+	    }
 		
 	  }
       
@@ -435,7 +525,7 @@ class Draw extends Canvas{
 	  public void mouseDragged(MouseEvent e) {
 		
 		if (opc==2) {
-			
+		  
 		  criaSelecao(e);
 		  
 	    }  
@@ -450,47 +540,32 @@ class Draw extends Canvas{
 		  
 		if (!campo.rect.contains(w,h)) {
 
-		  restringeCampo2();
+		  restringeCampo2(campo);
 		  	
 		}
-		
-		//for (Quadrante q:selecao) {
-			
-	      //if (q.rect.contains(e.getX(),e.getY())||q.rect.intersects(buffer.rect.x,buffer.rect.y,buffer.rect.width+1,buffer.rect.height+1))
-			  
-		  //proceed=false;
-			  
-		//}
 		  
-		//if (proceed) {
-			
+		if (px<w&&py<h) buffer = new Quadrante (px,py,w-px,h-py);
 		  
-		  if (px<w&&py<h) buffer = new Quadrante (px,py,w-px,h-py);
+		else if (px<w&&py>h) buffer = new Quadrante (px,h,w-px,py-h);
 		  
-		  else if (px<w&&py>h) buffer = new Quadrante (px,h,w-px,py-h);
+		else if (px>w&&py<h) buffer = new Quadrante (w,py,px-w,h-py);
 		  
-		  else if (px>w&&py<h) buffer = new Quadrante (w,py,px-w,h-py);
+		else if (px>w&&py>h) buffer = new Quadrante (w,h,px-w,py-h);
 		  
-		  else if (px>w&&py>h) buffer = new Quadrante (w,h,px-w,py-h);
-		  
-	    //}
-	    
-	    if(buffer!=null)buffer2 = new QColor ((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height,new Color (255,153,51,220));
+	    buffer2 = new QColor ((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height,new Color (255,153,51,220));
 		  
 		repaint(dx+20,dy+20,41*20,32*20);
-	      
-	    proceed=true;
 		  
 	  }
 	  
 	  //Restringe o crescimento da área de seleção
-	  public void restringeCampo2 () {
+	  public void restringeCampo2 (Quadrante campo) {
 		  
 		int aux=campo.rect.outcode(w,h);
 			  
-		if(aux==Rectangle2D.OUT_TOP) h = (int)campo.rect.y+1;
+		if(aux==Rectangle2D.OUT_TOP) h = (int)campo.rect.y;
 			  
-		else if (aux==Rectangle2D.OUT_LEFT) w = (int)campo.rect.x+1;
+		else if (aux==Rectangle2D.OUT_LEFT) w = (int)campo.rect.x;
 			  
 		else if (aux==Rectangle2D.OUT_BOTTOM) h = (int)(campo.rect.y+campo.rect.height)-1;
 			  
@@ -498,14 +573,14 @@ class Draw extends Canvas{
 			  
 		else if (aux==Rectangle2D.OUT_TOP+Rectangle2D.OUT_LEFT) {
 			    
-	      h = (int)campo.rect.y+1;
-	      w = (int)campo.rect.x+1;
+	      h = (int)campo.rect.y;
+	      w = (int)campo.rect.x;
 			    
 		}
 			  
 		else if (aux==Rectangle2D.OUT_TOP+Rectangle2D.OUT_RIGHT) {
 			    
-	      h = (int)campo.rect.y+1;
+	      h = (int)campo.rect.y;
 	      w = (int)(campo.rect.x+campo.rect.width)-1;
 			    
 		}
@@ -513,7 +588,7 @@ class Draw extends Canvas{
 		else if (aux==Rectangle2D.OUT_BOTTOM+Rectangle2D.OUT_LEFT) {
 			    
 		  h = (int)(campo.rect.y+campo.rect.height)-1;
-		  w = (int)campo.rect.x+1;
+		  w = (int)campo.rect.x;
 			    
 		}
 			  
@@ -541,7 +616,6 @@ class Draw extends Canvas{
 	  //Finaliza a criação da área de seleção
 	  public void fimSelecao (MouseEvent e) {
 		
-		proceed=true;
 		selecionando=false;
 		selecao.add(new Quadrante((int)buffer.rect.x,(int)buffer.rect.y,(int)buffer.rect.width,(int)buffer.rect.height));
 		buffer=new Quadrante(dx+20,dy+20,0,0);
@@ -579,6 +653,9 @@ class Draw extends Canvas{
     else if (opc==2) {
 	  
 	  select(g2);
+	  element(g2);
+	  
+	  if (legselectboo) modleg (g2);
 	  
     }
 	  
@@ -780,7 +857,53 @@ class Draw extends Canvas{
       }
     
   }
-  	
+  
+  //Desenha os elementos do campo de estratégia
+  public void element (Graphics2D g2) {
+	
+	//if (!robos.isEmpty()) {
+	
+	if (elemento==1) {
+	  
+	  g2.setColor(aux.c);
+	  g2.fillRect(aux.x,aux.y,20,20);
+	  g2.setColor(getForeground());
+	  	
+	}
+	
+	else if (elemento==2) {
+	  
+	  g2.setColor(new Color (196,105,77));
+	  g2.fillArc((int)aux2.getX(),(int)aux2.getY(),(int)aux2.getWidth(),(int)aux2.getHeight(),0,360);
+	  g2.setColor(getForeground());
+	  	
+	}
+	
+	for (QColor qc:robos) {
+	 
+	  g2.setColor(qc.c);
+	  g2.fillRect(qc.x+1,qc.y+1,qc.w,qc.h);
+	  g2.setColor(getForeground());
+	 
+	}
+	
+	for (Ellipse2D.Float ell:bolas) {
+	 
+	  g2.setColor(new Color (196,105,77));
+	  g2.fillArc((int)ell.x,(int)ell.y,(int)ell.width,(int)ell.height,0,360);
+	  g2.setColor(getForeground());
+	 
+	}
+	
+  }
+  
+  //Controla o mecanismo de seleção do elemento da legenda a ser modificado na estratégia
+  public void modleg (Graphics2D g2) {
+	
+	g2.draw(legselect);  
+	  
+  }
+  
 }
 
 //Classe que guarda as String que serão impressas e suas coordenadas
@@ -1072,15 +1195,101 @@ class Interpola {
   	
 }
 
+//Classe com o listener do teclado
+class Teclado extends KeyAdapter {
+  
+  Draw draw;
+  int temp;
+  String acento = "çãáÁâéêõó";
+  
+  Teclado (Draw d) {
+	  
+	draw = d;
+	  
+  }
+  
+  @Override
+  public void keyPressed (KeyEvent e) {
+
+    if (e.getKeyCode()==KeyEvent.VK_ENTER) draw.enter++;
+    
+    if (draw.enter==1) mod(e);
+    
+    else if (draw.enter==2) mod2(e);
+    
+    else if (draw.enter>=3) {
+    
+      draw.enter=0;
+      draw.legselectboo=false;
+      draw.repaint(870+draw.dx,245+draw.dy,160,190);
+      
+    }
+    
+  }
+  
+  public void mod (KeyEvent e) {
+	
+	draw.legselectboo=true;
+	
+	if (e.getKeyCode()==KeyEvent.VK_DOWN) {
+		
+	  draw.legselect.y+=30;
+	  draw.escolha++;
+	  
+	  if (draw.legselect.y>(400+draw.dy)) {
+	  
+	    draw.legselect.y=250+draw.dy;
+	    draw.escolha=0; 
+	  
+      }
+	  
+	}
+	  
+    else if (e.getKeyCode()==KeyEvent.VK_UP) {
+		
+	  draw.legselect.y-=30;
+	  draw.escolha--;
+	  
+	  if (draw.legselect.y<(250+draw.dy)) {
+	  
+	    draw.legselect.y=400+draw.dy;
+	    draw.escolha=5;
+	    
+	  }
+	  
+	}
+	
+	draw.repaint(870+draw.dx,245+draw.dy,160,190);
+	  
+  }
+  
+  public void mod2 (KeyEvent e) {
+	  
+	temp = e.getKeyCode();
+	
+	Stringco aux = draw.legenda2.get(draw.escolha);
+	
+	if (temp==KeyEvent.VK_BACK_SPACE&&aux.str.length()>2) aux.str=aux.str.substring(0,aux.str.length()-1);
+	
+	else if (temp>64&&temp<91||temp==32) aux.str=aux.str.concat(""+e.getKeyChar());
+	
+	else if (temp>48&&temp<58) aux.str=aux.str.concat(""+acento.charAt(temp-49));
+	
+	draw.repaint(870+draw.dx,245+draw.dy,160,190);
+	  
+  }
+  
+}
+
 //Classe que contém a main
 class Visao_Barreira {
 
   //Variáveis base que iniciam o programa
   JFrame jan = new JFrame ("Campo");
   BufferedImage img=null;
-  Draw draw = new Draw();
-  Inicio in = new Inicio(draw,jan);
   Visao_Barreira vb;
+  Draw draw;
+  Inicio in;
   Menu menu ;
   //Variáveis que auxiliam no funcionamento dos botões
   JButton reset = new JButton ("Reset");
@@ -1113,6 +1322,8 @@ class Visao_Barreira {
   };
   Timer resett;
   Timer gradet;
+  JButton elem = new JButton("Colocar Elemento");
+  JButton last = new JButton("Desfazer Ação");
   
   //Cria as instâncias e inicia o programa
   public static void main (String[] args) {
@@ -1130,11 +1341,15 @@ class Visao_Barreira {
       System.out.println("Não Carrego");
     }
 	
+	vb.draw = new Draw(vb);
+	vb.in = new Inicio(vb.draw,vb.jan);
 	vb.menu = new Menu(vb);
     
     vb.prep(vb);
     vb.prep2(vb);
     vb.prep3(vb);
+    vb.prep4(vb);
+    vb.prep5(vb);
     vb.draw.setBounds(0,0,1100,800);
 	vb.jan.setResizable(false);
 	vb.jan.setIconImage(vb.img);
@@ -1157,12 +1372,14 @@ class Visao_Barreira {
 		
 		  vb.jan.remove(vb.draw);
 		  opc=vb.draw.opc;
-		  vb.draw=new Draw();
+		  vb.draw=new Draw(vb);
+		  vb.draw.addKeyListener(new Teclado(vb.draw));
 		  vb.draw.opc=opc;
 		  vb.in = new Inicio(vb.draw,vb.jan);
 		  vb.jan.add(vb.draw);
 		  vb.draw.setBounds(0,0,1100,800);
 		  vb.resetboo=false;
+		  vb.draw.requestFocusInWindow();
 		  
 	      vb.resett = new Timer(4000,vb.resetac);
 	      vb.resett.start();
@@ -1242,6 +1459,66 @@ class Visao_Barreira {
 	});
 	
 	vb.rmenu.setBounds(870+vb.draw.dx,630+vb.draw.dy,161,50);
+	  
+  }
+  
+  //Prepara o botão que posiciona elementos
+  public static void prep4 (Visao_Barreira vb) {
+	
+	vb.elem.addActionListener(new ActionListener() {
+	  
+	  @Override
+	  public void actionPerformed(ActionEvent e) {
+		
+		vb.aux = ((JButton)e.getSource()).getText();
+		
+		if (vb.aux.equalsIgnoreCase("Colocar Elemento")) {
+		  
+		  ((JButton)e.getSource()).setText("Colocar: Robo");
+		  vb.draw.elemento=1;
+		  vb.draw.repaint(vb.draw.dx,vb.draw.dy,43*20,34*20);
+		  	
+	    }
+	      
+	    else if (vb.aux.equalsIgnoreCase("Colocar: Robo")) {
+		  
+		  ((JButton)e.getSource()).setText("Colocar: Bola");
+		  vb.draw.elemento=2;
+		  vb.draw.repaint(vb.draw.dx,vb.draw.dy,43*20,34*20);
+		  	
+	    }
+	      
+	    else if (vb.aux.equalsIgnoreCase("Colocar: Bola")) {
+		  
+		  ((JButton)e.getSource()).setText("Colocar Elemento");
+		  vb.draw.elemento=0;
+		  vb.draw.repaint(vb.draw.dx,vb.draw.dy,43*20,34*20);
+		  	
+	    }
+		  
+	  }
+	  	
+	});
+	
+	vb.elem.setBounds(870+vb.draw.dx,180+vb.draw.dy,161,50);
+	  
+  }
+  
+  //Prepara o botão que retira a ultima coisa colocada no campo da estratégia
+  public static void prep5 (Visao_Barreira vb) {
+	
+	vb.last.addActionListener(new ActionListener() {
+	  
+	  @Override
+	  public void actionPerformed(ActionEvent e) {
+		
+		//vb.menu.back();
+		  
+	  }
+	  	
+	});
+	
+	vb.last.setBounds(870+vb.draw.dx,125+vb.draw.dy,161,50);
 	  
   }
   
