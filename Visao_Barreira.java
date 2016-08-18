@@ -147,6 +147,9 @@ class Draw extends Canvas{
   //Variaveis que controlam a distância em pixels do canto superio  esquerdo da tela
   int dx=55;
   int dy=25;
+  //Variáveis que controlam o tamanho do robo
+  int robo_largura=30;
+  int robo_altura=30;
   //Variavel que controla a opção escolhida no menu, e como o campo será utilizado
   int opc = 0;
   //Contém os quadrados que desenham o campo
@@ -175,7 +178,7 @@ class Draw extends Canvas{
   Quadrante gol_esq;
   Quadrante gol_dir;
   //Desenha o quadrado do robo que segue o mouse
-  QColor aux = new QColor (2000,2000,20,20,new Color(100,100,100));
+  QColor aux = new QColor (2000,2000,30,30,new Color(100,100,100));
   Ellipse2D.Float aux2 = new Ellipse2D.Float (2000,2000,20,20);
   //Desenha a circunferencia da bola que segue o mouse
   Stringco instrucao= null;
@@ -267,7 +270,7 @@ class Draw extends Canvas{
 		  
 		  roboxy = new Point2D.Float ((int)w-10,(int)h-10);
 		  
-		  robo = new QColor ((int)roboxy.x-10,(int)roboxy.y-10,20,20,new Color(100,100,100));
+		  robo = new QColor ((int)roboxy.x-10,(int)roboxy.y-10,robo_largura,robo_altura,new Color(100,100,100));
 		  roboboo=false;
 		  bolaboo=true;
 		  repaint();
@@ -459,7 +462,7 @@ class Draw extends Canvas{
 		
 		else if (opc==2&&!campo2.rect.contains(w,h)) restringeCampo2(campo2);
 		  
-		aux = new QColor (w-10,h-10,20,20,new Color(100,100,100));
+		aux = new QColor (w-10,h-10,robo_largura,robo_altura,new Color(100,100,100));
 		  
 		if (px!=w||py!=h) {
 		  
@@ -831,7 +834,7 @@ class Draw extends Canvas{
 	  g2.draw(robo_area.rect);
 	  
 	  g2.setColor(aux.c);
-	  g2.fillRect(aux.x,aux.y,20,20);
+	  g2.fillRect(aux.x,aux.y,robo_largura,robo_altura);
 	  g2.setColor(getForeground());
 	  	
 	}
@@ -839,7 +842,7 @@ class Draw extends Canvas{
 	else if (!roboboo) {
 	  
 	  g2.setColor(robo.c);
-	  g2.fillRect(robo.x,robo.y,20,20);
+	  g2.fillRect(robo.x,robo.y,robo_largura,robo_altura);
 	  g2.setColor(getForeground());
 	  	
 	}
@@ -948,12 +951,10 @@ class Draw extends Canvas{
   //Desenha os elementos do campo de estratégia
   public void element (Graphics2D g2) {
 	
-	//if (!robos.isEmpty()) {
-	
 	if (elemento==1) {
 	  
 	  g2.setColor(aux.c);
-	  g2.fillRect(aux.x,aux.y,20,20);
+	  g2.fillRect(aux.x,aux.y,robo_largura,robo_altura);
 	  g2.setColor(getForeground());
 	  	
 	}
