@@ -140,7 +140,7 @@ class Menu {
 }
 
 //Classe que faz os desenhos e trata o mouse
-class Draw extends Canvas{
+class Draw extends JPanel{
 
   Graphics2D g2;
   
@@ -172,7 +172,7 @@ class Draw extends Canvas{
   Vector<Quadrante> arco = new Vector<Quadrante>();
   //Desenham os limites em volta das areas de seleção
   Quadrante robo_area;
-  Quadrante robo_area_aux = new Quadrante (7*20+dx+11,2*20+dy+11,12*20,29*20);
+  Quadrante robo_area_aux = new Quadrante (7*20+dx+11,2*20+dy+11,13*20-robo_largura,30*20-robo_altura);
   Quadrante bola_area;
   Quadrante bola_area_aux = new Quadrante (23*20+dx+10,3*20+dy+10,13*20+1,27*20+1);
   Quadrante gol_esq;
@@ -226,8 +226,11 @@ class Draw extends Canvas{
   //Variavel para controle da grade
   int grade=0;
   
+  //Construtor, inicia o double buffering e contém o mouse listener
   Draw (Visao_Barreira v) {
 	  
+	super(true);
+	
     vb=v;
 	
 	mouseAdapter = new MouseAdapter() {
@@ -270,7 +273,7 @@ class Draw extends Canvas{
 		  
 		  roboxy = new Point2D.Float ((int)w-10,(int)h-10);
 		  
-		  robo = new QColor ((int)roboxy.x-10,(int)roboxy.y-10,robo_largura,robo_altura,new Color(100,100,100));
+		  robo = new QColor ((int)roboxy.x-robo_largura/2,(int)roboxy.y-robo_altura/2,robo_largura,robo_altura,new Color(100,100,100));
 		  roboboo=false;
 		  bolaboo=true;
 		  repaint();
@@ -289,8 +292,8 @@ class Draw extends Canvas{
 		  
 		  if (!bola_area_aux.rect.contains(w,h)) restringeCampo2(bola_area_aux);
 		  
-		  bolaxy = new Point2D.Float ((int)e.getX(),(int)e.getY());
-		  bola = new Ellipse2D.Float (e.getX()-10,e.getY()-10,20,20);
+		  bolaxy = new Point2D.Float ((int)w,(int)h);
+		  bola = new Ellipse2D.Float ((int)bolaxy.x-10,bolaxy.y-10,20,20);
 		  bolaboo=false;
 		  golboo=true;
 		  repaint();
@@ -466,9 +469,9 @@ class Draw extends Canvas{
 		  
 		if (px!=w||py!=h) {
 		  
-		  if (opc==1) repaint (7*20+dx,2*20+dy,13*20,30*20);
+		  if (opc==1) repaint ();
 		  
-		  else if (opc==2) repaint (dx+20,dy+20,41*20,32*20);
+		  else if (opc==2) repaint ();
 		  
 		  px=w;
 		  py=h;
@@ -491,9 +494,9 @@ class Draw extends Canvas{
 		  
 		if (px!=w||py!=h) {
 		  
-		  if (opc==1) repaint (23*20+dx,3*20+dy,14*20,28*20);
+		  if (opc==1) repaint ();
 		  
-		  else if (opc==2) repaint (dx+20,dy+20,41*20,32*20);
+		  else if (opc==2) repaint ();
 		  
 		  px=w;
 		  py=h;
@@ -538,7 +541,7 @@ class Draw extends Canvas{
 		  
 		else if (px>w&&py>h) buffer = new Quadrante (w,h,px-w,py-h);
 		  
-		repaint(dx+20,dy+20,41*20,32*20);
+		repaint();
 		  
 	  }
 	  
@@ -556,7 +559,7 @@ class Draw extends Canvas{
 		
 		buffer3 = new Line2D.Float(px,py,w,h);
 		
-		repaint(dx+20,dy+20,41*20,32*20);
+		repaint();
 		  
 	  }
 	  
@@ -641,7 +644,7 @@ class Draw extends Canvas{
 		buffer3=new Line2D.Float(2000,2000,2001,2001);
 		elemento=0;
 		vb.elem.setText("Colocar Elemento");
-		repaint(dx+20,dy+20,41*20,32*20);
+		repaint();
 		  
 	  }
 	  
@@ -655,14 +658,18 @@ class Draw extends Canvas{
   
   //Faz os desenhos na tela
   @Override
-  public void paint(Graphics g) {
+  public void paintComponent(Graphics g) { update(g); }
+  
+  //Redesenha o necessário na tela
+  @Override
+  public void update(Graphics g) {
 	
-	super.paint(g);
 	g2 = (Graphics2D) g;
 	
     campo(g2);
     ajuda(g2);
     ajuda2(g2);
+    maintenance(g2);
     
     if(grade==1)grid(g2);
     else if(grade==2)grid2(g2);
@@ -687,7 +694,10 @@ class Draw extends Canvas{
   
   //Desenha as diferentes cores que compõem o campo
   public void campo (Graphics2D g2) {
-   
+    
+    g2.setColor(new Color(235,235,235));
+    g2.fillRect(0,0,1100,800);
+    
 	for (QColor qc:special) {
 	 
 	 g2.setColor(qc.c);
@@ -816,6 +826,22 @@ class Draw extends Canvas{
      
      else g2.drawString(instrucao.str,instrucao.x,instrucao.y);
 	 
+  }
+  
+  //Repinta os botões
+  public void maintenance (Graphics2D g2) {
+	
+	vb.reset.repaint();
+	vb.grade.repaint();
+	vb.rmenu.repaint();
+	
+	if (opc==2) {
+	  
+	  vb.elem.repaint();
+	  vb.last.repaint();
+	  	
+	}
+	  
   }
   
   //Desenha as áreas de seleção dos elementos e redesenha o robo e a bola que seguem o mouse alem das coordenadas finais do mesmo e do objetivo
@@ -1351,7 +1377,7 @@ class Teclado extends KeyAdapter {
     if (e.getKeyCode()==KeyEvent.VK_ENTER) { 
 		
 	  draw.enter++;
-	  draw.repaint(draw.dx+870,draw.dy,170,80);
+	  draw.repaint();
 	  
 	}
     
@@ -1363,7 +1389,7 @@ class Teclado extends KeyAdapter {
     
       draw.enter=0;
       draw.legselectboo=false;
-      draw.repaint(870+draw.dx,245+draw.dy,160,190);
+      draw.repaint();
       
     }
     
@@ -1402,7 +1428,7 @@ class Teclado extends KeyAdapter {
 	  
 	}
 	
-	draw.repaint(870+draw.dx,245+draw.dy,160,190);
+	draw.repaint();
 	  
   }
   
@@ -1419,7 +1445,7 @@ class Teclado extends KeyAdapter {
 	
 	else if ((temp>48&&temp<58)&&aux.str.length()<16) aux.str=aux.str.concat(""+acento.charAt(temp-49));
 	
-	draw.repaint(870+draw.dx,245+draw.dy,160,190);
+	draw.repaint();
 	  
   }
   
@@ -1621,7 +1647,7 @@ class Visao_Barreira {
 		  
 		  ((JButton)e.getSource()).setText("Colocar: Robo");
 		  vb.draw.elemento=1;
-		  vb.draw.repaint(vb.draw.dx,vb.draw.dy,43*20,34*20);
+		  vb.draw.repaint();
 		  	
 	    }
 	      
@@ -1629,7 +1655,7 @@ class Visao_Barreira {
 		  
 		  ((JButton)e.getSource()).setText("Colocar: Bola");
 		  vb.draw.elemento=2;
-		  vb.draw.repaint(vb.draw.dx,vb.draw.dy,43*20,34*20);
+		  vb.draw.repaint();
 		  	
 	    }
 	      
@@ -1637,7 +1663,7 @@ class Visao_Barreira {
 		  
 		  ((JButton)e.getSource()).setText("Colocar: Seta");
 		  vb.draw.elemento=3;
-		  vb.draw.repaint(vb.draw.dx,vb.draw.dy,43*20,34*20);
+		  vb.draw.repaint();
 		  	
 	    }
 	    
@@ -1645,11 +1671,11 @@ class Visao_Barreira {
 		  
 		  ((JButton)e.getSource()).setText("Colocar Elemento");
 		  vb.draw.elemento=0;
-		  vb.draw.repaint(vb.draw.dx,vb.draw.dy,43*20,34*20);
+		  vb.draw.repaint();
 		  	
 	    }
 	    
-	    vb.draw.repaint(vb.draw.dx+870,vb.draw.dy+15,170,80);
+	    vb.draw.repaint();
 		  
 	  }
 	  	
@@ -1699,7 +1725,7 @@ class Visao_Barreira {
 			
 		  }
 		  
-		  vb.draw.repaint(vb.draw.dx+20,vb.draw.dy+20,41*20,32*20);
+		  vb.draw.repaint();
 		  	
 	    }
 		  
